@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
@@ -16,7 +16,11 @@ export const metadata: Metadata = {
   description:
     "Somalia's trusted crowdfunding platform. Help individuals, students, medical patients, and community projects raise funds safely and transparently.",
   keywords: ["crowdfunding", "Somalia", "donations", "fundraising", "EVC Plus"],
-  viewport: "width=device-width, initial-scale=1",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default async function RootLayout({
@@ -28,6 +32,9 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
       <body className={`${inter.variable} min-h-screen flex flex-col`}>
         <Header profile={profile} />
         <main className="flex-1">{children}</main>
