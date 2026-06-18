@@ -47,6 +47,7 @@ const adminLinks = [
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/verification", label: "Verification", icon: FileCheck },
   { href: "/admin/reports", label: "Fraud Reports", icon: Flag },
+  { href: "/admin/notifications", label: "Notifications", icon: Bell },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 

@@ -4,9 +4,9 @@ import { APP_NAME } from "@/lib/constants";
 
 export function Footer() {
   return (
-    <footer className="border-t border-gray-200 bg-gray-50">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-8 md:grid-cols-4">
+    <footer className="border-t border-gray-200 bg-gray-50 w-full">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:py-12 sm:px-6 lg:px-8">
+        <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
           <div className="md:col-span-1">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
@@ -47,7 +47,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 border-t border-gray-200 pt-6 text-center text-sm text-text-muted">
+        <div className="mt-8 sm:mt-10 border-t border-gray-200 pt-6 text-center text-sm text-text-muted">
           &copy; {new Date().getFullYear()} {APP_NAME}. All rights reserved.
         </div>
       </div>

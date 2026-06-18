@@ -21,13 +21,13 @@ export default async function HomePage() {
   const campaigns = await getCampaigns();
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-hidden w-full">
       {/* Background Decorative Glows */}
-      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-secondary/10 blur-[120px] pointer-events-none" />
-      <div className="absolute top-[40%] right-[-10%] w-[400px] h-[400px] rounded-full bg-indigo-500/5 blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[30%] w-[300px] h-[300px] rounded-full bg-blue-400/5 blur-[80px] pointer-events-none" />
+      <div className="absolute top-[-20%] left-[-10%] w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] md:w-[500px] md:h-[500px] rounded-full bg-secondary/10 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[40%] right-[-10%] w-[200px] h-[200px] sm:w-[300px] sm:h-[300px] md:w-[400px] md:h-[400px] rounded-full bg-indigo-500/5 blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[30%] w-[150px] h-[150px] sm:w-[200px] sm:h-[200px] md:w-[300px] md:h-[300px] rounded-full bg-blue-400/5 blur-[80px] pointer-events-none" />
 
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Premium Hero Section */}
         <section className="relative rounded-3xl border border-secondary/10 bg-gradient-to-br from-white via-white to-secondary-light/20 p-8 sm:p-12 shadow-premium shadow-glow animate-slide-up text-center overflow-hidden">
           <div className="absolute top-3 right-3 opacity-10 sm:opacity-25 pointer-events-none animate-bounce-subtle">
@@ -41,14 +41,14 @@ export default async function HomePage() {
             </div>
 
             
-            <h1 className="text-4xl font-extrabold tracking-tight text-text sm:text-5xl leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-text leading-tight">
               Support Urgent Causes & <br />
               <span className="bg-gradient-to-r from-secondary to-indigo-600 bg-clip-text text-transparent">
                 Empower Communities
               </span>
             </h1>
-            
-            <p className="mx-auto max-w-lg text-sm sm:text-base text-text-muted leading-relaxed">
+
+            <p className="mx-auto max-w-lg text-sm sm:text-base md:text-lg text-text-muted leading-relaxed">
               Join thousands of Somalis who are making an impact. Securely donate via EVC Plus, Sahal, or Zaad to medical emergencies, education scholarships, and local charities.
             </p>
 
@@ -95,10 +95,10 @@ export default async function HomePage() {
         </section>
 
         {/* Active Campaigns List */}
-        <section className="pb-16 pt-4">
-          <div className="mb-6 flex items-center justify-between">
+        <section className="pb-16 pt-4 animate-fade-in" style={{ animationDelay: "0.5s" }}>
+          <div className="mb-6 flex items-center justify-between animate-slide-up" style={{ animationDelay: "0.6s" }}>
             <h2 className="text-xl font-bold text-text">Active Campaigns</h2>
-            <Link href="/campaigns" className="text-sm font-semibold text-secondary hover:underline flex items-center gap-1">
+            <Link href="/campaigns" className="text-sm font-semibold text-secondary hover:underline flex items-center gap-1 transition-all duration-200 hover:translate-x-1">
               View all campaigns
             </Link>
           </div>

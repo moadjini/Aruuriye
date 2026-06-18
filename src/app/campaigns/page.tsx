@@ -48,8 +48,8 @@ export default async function CampaignsPage({
   const campaigns = await getCampaigns(params);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 animate-fade-in">
+      <div className="mb-8 animate-slide-up" style={{ animationDelay: "0.1s" } as React.CSSProperties}>
         <h1 className="text-3xl font-bold text-text">Explore Campaigns</h1>
         <p className="mt-2 text-text-muted">
           Discover and support causes that matter in Somalia
@@ -61,13 +61,15 @@ export default async function CampaignsPage({
       </Suspense>
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {campaigns.map((campaign) => (
-          <CampaignCard key={campaign.id} campaign={campaign} />
+        {campaigns.map((campaign, index) => (
+          <div key={campaign.id} style={{ animationDelay: `${0.2 + index * 0.05}s` } as React.CSSProperties}>
+            <CampaignCard campaign={campaign} />
+          </div>
         ))}
       </div>
 
       {campaigns.length === 0 && (
-        <div className="py-20 text-center text-text-muted">
+        <div className="py-20 text-center text-text-muted animate-fade-in" style={{ animationDelay: "0.3s" } as React.CSSProperties}>
           <p className="text-lg">No campaigns found</p>
           <p className="mt-2 text-sm">Try adjusting your search filters</p>
         </div>

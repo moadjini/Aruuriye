@@ -26,13 +26,13 @@ export function Header({ profile }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/80 backdrop-blur-md shadow-sm">
-      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
+    <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/80 backdrop-blur-md shadow-sm w-full">
+      <div className="mx-auto flex h-16 max-w-5xl lg:max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/">
           <Logo />
         </Link>
 
-        <div className="hidden items-center gap-4 sm:flex">
+        <div className="hidden items-center gap-3 sm:gap-4 sm:flex">
           <Link href="/campaigns" className="text-sm font-semibold text-text-muted hover:text-secondary transition-colors">
             Explore
           </Link>

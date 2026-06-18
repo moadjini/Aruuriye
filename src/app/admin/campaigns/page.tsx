@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -12,7 +12,7 @@ export default function AdminCampaignsPage() {
   const [campaigns, setCampaigns] = useState<Record<string, unknown>[]>([]);
   const [filter, setFilter] = useState("pending_review");
 
-  const load = () => {
+  const load = useCallback(() => {
     const supabase = createClient();
     let query = supabase
       .from("campaigns")
@@ -21,9 +21,9 @@ export default function AdminCampaignsPage() {
 
     if (filter !== "all") query = query.eq("status", filter);
     query.then(({ data }) => setCampaigns(data || []));
-  };
+  }, [filter]);
 
-  useEffect(() => { load(); }, [filter]);
+  useEffect(() => { load(); }, [load]);
 
   const updateStatus = async (id: string, status: string, reason?: string) => {
     const supabase = createClient();
@@ -45,9 +45,9 @@ export default function AdminCampaignsPage() {
 
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-text">Manage Campaigns</h1>
-      <div className="mt-4 flex gap-2 flex-wrap">
+    <div className="animate-fade-in">
+      <h1 className="text-2xl font-bold text-text animate-slide-up" style={{ animationDelay: "0.1s" } as React.CSSProperties}>Manage Campaigns</h1>
+      <div className="mt-4 flex gap-2 flex-wrap animate-slide-up" style={{ animationDelay: "0.2s" } as React.CSSProperties}>
         {["pending_review", "active", "frozen", "rejected", "all"].map((f) => (
           <Button key={f} size="sm" variant={filter === f ? "primary" : "outline"} onClick={() => setFilter(f)}>
             {f.replace("_", " ")}
@@ -55,9 +55,9 @@ export default function AdminCampaignsPage() {
         ))}
       </div>
       <div className="mt-6 space-y-3">
-        {campaigns.map((c) => (
-          <div key={c.id as string} className="cursor-pointer" onClick={() => window.location.href = `/admin/campaigns/${c.id as string}`}>
-            <Card className="hover:shadow-md transition-shadow">
+        {campaigns.map((c, index) => (
+          <div key={c.id as string} className="cursor-pointer animate-slide-in-right" style={{ animationDelay: `${0.3 + index * 0.05}s` } as React.CSSProperties} onClick={() => window.location.href = `/admin/campaigns/${c.id as string}`}>
+            <Card className="hover:shadow-premium-hover hover:-translate-y-0.5 transition-all duration-300">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4">
                 <div>
                   <div className="flex items-center gap-2">

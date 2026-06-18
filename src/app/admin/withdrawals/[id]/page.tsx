@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -122,7 +123,9 @@ export default function AdminWithdrawalDetailPage({ params }: { params: Promise<
             {(campaign?.cover_image_url as string | undefined) && campaign && (
               <div>
                 <label className="text-sm font-medium text-text-muted">Campaign Cover</label>
-                <img src={campaign.cover_image_url as string} alt="Campaign cover" className="mt-2 rounded-lg w-full h-32 object-cover" />
+                <div className="mt-2 relative w-full h-32 rounded-lg overflow-hidden">
+                  <Image src={campaign.cover_image_url as string} alt="Campaign cover" fill className="object-cover" />
+                </div>
               </div>
             )}
           </CardContent>

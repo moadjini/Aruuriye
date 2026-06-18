@@ -15,7 +15,7 @@ interface Notification {
   link?: string;
 }
 
-export default function NotificationsPage() {
+export default function AdminNotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -87,12 +87,12 @@ export default function NotificationsPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="flex items-center justify-between animate-slide-up" style={{ animationDelay: "0.1s" } as React.CSSProperties}>
-        <h1 className="text-2xl font-bold text-text">Notifications</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-text">Admin Notifications</h1>
         {unreadCount > 0 && (
           <button
             onClick={markAllAsRead}
-            className="flex items-center gap-2 text-sm font-semibold text-secondary hover:text-secondary-dark transition-colors hover:scale-105 active:scale-95 duration-200"
+            className="flex items-center gap-2 text-sm font-semibold text-secondary hover:text-secondary-dark transition-colors"
           >
             <CheckCheck className="h-4 w-4" />
             Mark all as read
@@ -109,12 +109,12 @@ export default function NotificationsPage() {
       ) : (
         <div className="mt-6 space-y-3">
           {notifications.map((n, index) => (
-            <div key={n.id} style={{ animationDelay: `${0.2 + index * 0.05}s` } as React.CSSProperties}>
+            <div key={n.id} style={{ animationDelay: `${index * 0.05}s` } as React.CSSProperties}>
               <Card
-                className={`transition-all duration-300 hover:shadow-premium-hover hover:-translate-y-0.5 animate-slide-in-right ${!n.is_read ? "border-secondary/30 bg-secondary-light/20" : ""}`}
+                className={`transition-all duration-300 hover:shadow-premium-hover animate-slide-in-right ${!n.is_read ? "border-secondary/30 bg-secondary-light/20" : ""}`}
               >
                 <div className="flex items-start gap-3 p-4">
-                  <div className={`rounded-full p-2 transition-all duration-300 ${!n.is_read ? "bg-secondary/10" : "bg-gray-100"}`}>
+                  <div className={`rounded-full p-2 ${!n.is_read ? "bg-secondary/10" : "bg-gray-100"}`}>
                     <Bell className={`h-4 w-4 ${!n.is_read ? "text-secondary" : "text-gray-400"}`} />
                   </div>
                   <div className="flex-1">
@@ -125,7 +125,7 @@ export default function NotificationsPage() {
                       {!n.is_read && (
                         <button
                           onClick={() => markAsRead(n.id)}
-                          className="flex items-center gap-1 text-xs font-semibold text-secondary hover:text-secondary-dark transition-colors hover:scale-105 active:scale-95 duration-200"
+                          className="flex items-center gap-1 text-xs font-semibold text-secondary hover:text-secondary-dark transition-colors"
                         >
                           <Check className="h-3 w-3" />
                           Mark as read
@@ -138,7 +138,7 @@ export default function NotificationsPage() {
             </div>
           ))}
           {notifications.length === 0 && (
-            <div className="text-center py-12 animate-fade-in" style={{ animationDelay: "0.3s" } as React.CSSProperties}>
+            <div className="text-center py-12 animate-fade-in">
               <Bell className="h-12 w-12 text-gray-300 mx-auto mb-3" />
               <p className="text-text-muted">No notifications yet</p>
             </div>

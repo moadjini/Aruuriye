@@ -57,17 +57,17 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="max-w-lg">
+    <div className="max-w-lg animate-fade-in">
       <h1 className="text-2xl font-bold text-text">Settings</h1>
-      
+
       {profile?.verification_level && profile.verification_level !== "none" && (
-        <div className="mt-2 flex items-center gap-1.5 bg-secondary-light/45 border border-secondary/5 rounded-lg py-1.5 px-3 w-fit select-none">
+        <div className="mt-2 flex items-center gap-1.5 bg-secondary-light/45 border border-secondary/5 rounded-lg py-1.5 px-3 w-fit select-none animate-scale-in">
           <span className="text-xs text-text-muted">Account Tier:</span>
           <VerificationBadge level={profile.verification_level} showText />
         </div>
       )}
 
-      <Card className="mt-6">
+      <Card className="mt-6 animate-slide-up">
         <CardHeader><CardTitle>Profile</CardTitle></CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

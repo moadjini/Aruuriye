@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,7 +20,7 @@ export default function AdminVerificationDetailPage({ params }: { params: Promis
     const supabase = createClient();
     supabase
       .from("verification_requests")
-      .select("*, profiles!verification_requests_user_id_fkey(full_name, email, phone_number, city, role, verification_level)")
+      .select("*, profiles!verification_requests_user_id_fkey(full_name, email, phone_number, city, role, verification_level, avatar_url)")
       .eq("id", resolvedParams.id)
       .single()
       .then(({ data, error }) => {
@@ -32,7 +33,7 @@ export default function AdminVerificationDetailPage({ params }: { params: Promis
       });
   }, [resolvedParams.id]);
 
-  const handleReview = async (status: string, level: string) => {
+  const handleReview = async (status: string) => {
     setActionLoading(true);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -42,21 +43,28 @@ export default function AdminVerificationDetailPage({ params }: { params: Promis
       return;
     }
 
-    const result = await reviewVerificationAction(resolvedParams.id, request?.user_id as string, status, level, user.id);
-    
+    const result = await reviewVerificationAction(resolvedParams.id, request?.user_id as string, status, "verified", user.id);
+
     if (result.error) {
       alert("Failed to review verification: " + result.error);
     } else {
       alert(`Verification ${status} successfully!`);
       router.push("/admin/verification");
     }
-    
+
     setActionLoading(false);
   };
 
   if (!request) return <div className="text-center py-12">Loading...</div>;
 
   const profile = request.profiles as Record<string, string> | null;
+
+  // Split document URL if it contains the separator for multiple documents
+  const documentUrls = (request.document_url as string || "").includes("|||")
+    ? (request.document_url as string).split("|||")
+    : (request.document_url as string ? [request.document_url as string] : []);
+  const nationalIdUrl = documentUrls[0] || null;
+  const facePhotoUrl = documentUrls[1] || null;
 
   return (
     <div className="max-w-4xl">
@@ -71,8 +79,8 @@ export default function AdminVerificationDetailPage({ params }: { params: Promis
           <CardHeader><CardTitle>Verification Request</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-text-muted">Requested Level</label>
-              <p className="font-semibold">{request.requested_level as string}</p>
+              <label className="text-sm font-medium text-text-muted">Verification Type</label>
+              <p className="font-semibold">Blue Checkmark Verification</p>
             </div>
             <div>
               <label className="text-sm font-medium text-text-muted">Document Type</label>
@@ -86,21 +94,21 @@ export default function AdminVerificationDetailPage({ params }: { params: Promis
               <label className="text-sm font-medium text-text-muted">Submitted At</label>
               <p>{formatDate(String(request.created_at))}</p>
             </div>
-            {(request.document_url as string | undefined) && (request.document_url as string) !== '' && (request.document_url as string) !== 'null' && (
+            {nationalIdUrl && (
               <div>
-                <label className="text-sm font-medium text-text-muted">Document</label>
+                <label className="text-sm font-medium text-text-muted">National ID Document</label>
                 <div className="mt-2 flex flex-col gap-2">
-                  <a 
-                    href={request.document_url as string} 
-                    target="_blank" 
+                  <a
+                    href={nationalIdUrl}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium cursor-pointer w-full sm:w-auto"
                   >
-                    📄 View Document
+                    📄 View National ID
                   </a>
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(request.document_url as string);
+                      navigator.clipboard.writeText(nationalIdUrl);
                       alert("URL copied to clipboard!");
                     }}
                     className="text-xs text-primary hover:underline cursor-pointer"
@@ -108,13 +116,36 @@ export default function AdminVerificationDetailPage({ params }: { params: Promis
                     Copy URL to clipboard
                   </button>
                 </div>
-                <p className="text-xs text-text-muted mt-1 break-all">{request.document_url as string}</p>
               </div>
             )}
-            {(!(request.document_url as string | undefined) || (request.document_url as string) === '' || (request.document_url as string) === 'null') && (
+            {facePhotoUrl && (
               <div>
-                <label className="text-sm font-medium text-text-muted">Document</label>
-                <p className="text-sm text-text-muted mt-2 italic">No document uploaded (admin direct verification)</p>
+                <label className="text-sm font-medium text-text-muted">Face Photo (KYC)</label>
+                <div className="mt-2 flex flex-col gap-2">
+                  <a
+                    href={facePhotoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium cursor-pointer w-full sm:w-auto"
+                  >
+                    📷 View Face Photo
+                  </a>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(facePhotoUrl);
+                      alert("URL copied to clipboard!");
+                    }}
+                    className="text-xs text-primary hover:underline cursor-pointer"
+                  >
+                    Copy URL to clipboard
+                  </button>
+                </div>
+              </div>
+            )}
+            {!nationalIdUrl && !facePhotoUrl && (
+              <div>
+                <label className="text-sm font-medium text-text-muted">Documents</label>
+                <p className="text-sm text-text-muted mt-2 italic">No documents uploaded (admin direct verification)</p>
               </div>
             )}
           </CardContent>
@@ -124,6 +155,17 @@ export default function AdminVerificationDetailPage({ params }: { params: Promis
         <Card>
           <CardHeader><CardTitle>User Information</CardTitle></CardHeader>
           <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-text-muted">Profile Picture</label>
+              {profile?.avatar_url && (
+                <div className="mt-2 relative w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200">
+                  <Image src={profile.avatar_url} alt="Profile" fill className="object-cover" />
+                </div>
+              )}
+              {!profile?.avatar_url && (
+                <p className="text-sm text-text-muted mt-2 italic">No profile picture</p>
+              )}
+            </div>
             <div>
               <label className="text-sm font-medium text-text-muted">Full Name</label>
               <p className="font-semibold">{profile?.full_name}</p>
@@ -159,10 +201,10 @@ export default function AdminVerificationDetailPage({ params }: { params: Promis
           <div className="flex flex-wrap gap-3">
             {request.status === "pending" && (
               <>
-                <Button onClick={() => handleReview("verified", request.requested_level as string)} loading={actionLoading}>
-                  Approve {request.requested_level as string}
+                <Button onClick={() => handleReview("verified")} loading={actionLoading}>
+                  Approve - Give Blue Checkmark
                 </Button>
-                <Button variant="danger" onClick={() => handleReview("rejected", "none")} loading={actionLoading}>
+                <Button variant="danger" onClick={() => handleReview("rejected")} loading={actionLoading}>
                   Reject Request
                 </Button>
               </>

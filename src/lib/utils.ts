@@ -42,9 +42,7 @@ export function calculatePlatformFee(amount: number, feePercent: number = 5): nu
 export function getVerificationBadge(level: string): { label: string; color: string } {
   const badges: Record<string, { label: string; color: string }> = {
     none: { label: "Unverified", color: "bg-gray-100 text-gray-600" },
-    level_1: { label: "Phone Verified", color: "bg-blue-100 text-blue-700" },
-    level_2: { label: "Identity Verified", color: "bg-green-100 text-green-700" },
-    level_3: { label: "Trusted Fundraiser", color: "bg-amber-100 text-amber-700" },
+    verified: { label: "✓ Verified", color: "bg-blue-500 text-white" },
   };
   return badges[level] || badges.none;
 }

@@ -14,8 +14,8 @@ export default async function DashboardPage() {
 
   if (profile?.role === "visitor") {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6 w-full">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-text">Dashboard</h1>
             <p className="text-text-muted">Welcome back, {profile.full_name}</p>
@@ -24,20 +24,20 @@ export default async function DashboardPage() {
 
         <Card className="border-secondary/20 bg-gradient-to-r from-secondary-light/20 to-transparent shadow-sm">
           <CardContent className="pt-6">
-            <div className="flex items-start gap-4">
+            <div className="flex flex-col sm:flex-row items-start gap-4">
               <div className="rounded-xl bg-secondary-light p-3 text-secondary shrink-0">
                 <ShieldEllipsis className="h-6 w-6" />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 flex-1">
                 <h2 className="text-lg font-bold text-text">Become a Fundraiser</h2>
-                <p className="text-sm text-text-muted max-w-xl">
+                <p className="text-sm text-text-muted max-w-full">
                   To start creating campaigns, posting updates, and raising funds on HaddaICaawi, you need to apply for a Fundraiser account. Our admin team will verify your identity.
                 </p>
 
                 {profile.verification_status === "unverified" && (
                   <div className="pt-2">
-                    <Link href="/dashboard/verification">
-                      <Button>Submit Fundraiser Request</Button>
+                    <Link href="/dashboard/verification" className="block w-full sm:w-auto">
+                      <Button className="w-full sm:w-auto">Submit Fundraiser Request</Button>
                     </Link>
                   </div>
                 )}
@@ -62,8 +62,8 @@ export default async function DashboardPage() {
                     <p className="text-xs text-text-muted">
                       Please ensure your ID document is clear, legible, and valid, then try submitting your request again.
                     </p>
-                    <Link href="/dashboard/verification" className="block">
-                      <Button variant="outline" size="sm">Submit New Request</Button>
+                    <Link href="/dashboard/verification" className="block w-full sm:w-auto">
+                      <Button variant="outline" size="sm" className="w-full sm:w-auto">Submit New Request</Button>
                     </Link>
                   </div>
                 )}
@@ -107,18 +107,18 @@ export default async function DashboardPage() {
   const availableBalance = totalRaised - totalWithdrawn;
 
   return (
-    <div>
-      <div className="flex items-center justify-between">
+    <div className="w-full">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-text">Dashboard</h1>
           <p className="text-text-muted">Welcome back, {profile?.full_name}</p>
         </div>
-        <Link href="/dashboard/campaigns/new">
-          <Button>Create Campaign</Button>
+        <Link href="/dashboard/campaigns/new" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto">Create Campaign</Button>
         </Link>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-8 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard title="Total Raised" value={formatCurrency(totalRaised)} icon={DollarSign} />
         <StatCard title="Available Balance" value={formatCurrency(availableBalance)} icon={DollarSign} subtitle={`${pendingDonations} pending donations`} />
         <StatCard title="Total Donors" value={totalDonors} icon={Users} />
@@ -136,18 +136,18 @@ export default async function DashboardPage() {
                 <Link
                   key={campaign.id}
                   href={`/dashboard/campaigns/${campaign.id}`}
-                  className="group flex items-center justify-between rounded-lg border border-gray-200 p-4 hover:border-secondary hover:bg-secondary-light/30 transition-all cursor-pointer"
+                  className="group flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-lg border border-gray-200 p-4 hover:border-secondary hover:bg-secondary-light/30 transition-all cursor-pointer"
                 >
-                  <div className="flex items-center gap-3">
-                    <Megaphone className="h-5 w-5 text-primary group-hover:text-secondary transition-colors" />
-                    <div>
-                      <p className="font-medium group-hover:text-secondary transition-colors">{campaign.title}</p>
+                  <div className="flex items-center gap-3 w-full">
+                    <Megaphone className="h-5 w-5 text-primary group-hover:text-secondary transition-colors shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium group-hover:text-secondary transition-colors truncate">{campaign.title}</p>
                       <p className="text-sm text-text-muted">
                         {formatCurrency(campaign.raised_amount)} of {formatCurrency(campaign.goal_amount)}
                       </p>
                     </div>
                   </div>
-                  <Badge className={getStatusColor(campaign.status)}>
+                  <Badge className={getStatusColor(campaign.status)} shrink-0>
                     {campaign.status.replace("_", " ")}
                   </Badge>
                 </Link>

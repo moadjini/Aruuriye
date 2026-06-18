@@ -91,12 +91,12 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div>
+    <div className="animate-fade-in">
       <h1 className="text-2xl font-bold text-text">Manage Users</h1>
       <div className="mt-6 space-y-3">
         {users.map((u) => {
           return (
-            <Card key={u.id as string}>
+            <Card key={u.id as string} className="transition-all duration-300 hover:shadow-premium-hover animate-slide-in-right">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -108,8 +108,12 @@ export default function AdminUsersPage() {
                   <p className="text-sm text-text-muted mt-1">{u.email as string} · {u.city as string} · {formatDate(u.created_at as string)}</p>
                 </div>
                 <div className="flex gap-2 flex-wrap">
-                  <Button size="sm" variant="outline" onClick={() => verifyUser(u.id as string, "level_2")}>Verify ID</Button>
-                  <Button size="sm" variant="outline" onClick={() => verifyUser(u.id as string, "level_3")}>Trust</Button>
+                  {(u.verification_level as string) === "none" && (
+                    <Button size="sm" variant="outline" onClick={() => verifyUser(u.id as string, "level_1")}>Verify</Button>
+                  )}
+                  {(u.verification_level as string) !== "none" && (
+                    <Button size="sm" variant="outline" onClick={() => verifyUser(u.id as string, "none")}>Unverify</Button>
+                  )}
                   {(u.role as string) === "visitor" && (
                     <Button size="sm" variant="secondary" onClick={() => changeRole(u.id as string, "fundraiser")}>Make Fundraiser</Button>
                   )}

@@ -2,11 +2,11 @@
 
 @theme {
   --color-primary: #ffffff;
-  --color-secondary: #2563eb;
-  --color-secondary-dark: #1d4ed8;
-  --color-secondary-light: #eff6ff;
+  --color-secondary: #0066CC;
+  --color-secondary-dark: #0055AA;
+  --color-secondary-light: #E6F0FA;
   --color-accent: #f8fafc;
-  --color-text: #0f172a;
+  --color-text: #1A2530;
   --color-text-muted: #475569;
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 }
@@ -46,6 +46,30 @@
     animation: bounceSubtle 2s infinite;
   }
 
+  .animate-pulse-glow {
+    animation: pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s linear infinite;
+  }
+
+  .animate-slide-in-right {
+    animation: slideInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .animate-slide-in-left {
+    animation: slideInLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .animate-feed-item {
+    animation: feedItemEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .animate-progress-fill {
+    animation: progressFill 1.2s cubic-bezier(0.1, 1, 0.1, 1);
+  }
+
   .glass-panel {
     background: rgba(255, 255, 255, 0.75);
     backdrop-filter: blur(12px);
@@ -74,11 +98,21 @@
     position: absolute;
     inset: 0;
     padding: 2px;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8, #2563eb);
+    background: linear-gradient(135deg, #0066CC, #0055AA, #0066CC);
     border-radius: inherit;
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask-composite: exclude;
     -webkit-mask-composite: xor;
+  }
+
+  .avatar-overlap {
+    margin-left: -8px;
+    border: 2px solid white;
+    border-radius: 50%;
+  }
+
+  .avatar-overlap:first-child {
+    margin-left: 0;
   }
 
   @keyframes fadeIn {
@@ -114,6 +148,66 @@
     }
     50% {
       transform: translateY(-4px);
+    }
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% {
+      box-shadow: 0 0 20px -5px rgba(0, 102, 204, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 40px -10px rgba(0, 102, 204, 0.5);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes feedItemEntrance {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes progressFill {
+    from {
+      width: 0%;
+    }
+    to {
+      width: var(--target-width);
     }
   }
 }

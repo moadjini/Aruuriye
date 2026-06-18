@@ -102,23 +102,23 @@ export default function NewCampaignPage() {
   };
 
   return (
-    <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold text-text">Create Campaign</h1>
-      <p className="mt-1 text-text-muted">Start raising funds for your cause</p>
+    <div className="max-w-2xl animate-fade-in">
+      <h1 className="text-2xl font-bold text-text">Let's Create Your Campaign</h1>
+      <p className="mt-1 text-text-muted">Tell your story and start raising funds for your cause</p>
 
-      <Card className="mt-6 shadow-sm border border-gray-150">
+      <Card className="mt-6 shadow-sm border border-gray-150 animate-slide-up">
         <CardHeader>
           <CardTitle>Campaign Details</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            <Input label="Campaign Title" {...register("title")} error={errors.title?.message} />
-            <Textarea label="Short Description" {...register("description")} error={errors.description?.message} />
-            <Textarea label="Full Story" {...register("story")} />
+            <Input label="What's your campaign about?" placeholder="Give your campaign a clear, descriptive title" {...register("title")} error={errors.title?.message} />
+            <Textarea label="Briefly describe your campaign" placeholder="In one sentence, what are you raising money for?" {...register("description")} error={errors.description?.message} />
+            <Textarea label="Tell your full story" placeholder="Share the details of your situation, why this matters, and how the funds will help" {...register("story")} />
             
             {/* Cover Photo Upload Field */}
             <div>
-              <label className="block text-sm font-semibold text-text mb-1.5">Campaign Cover Photo *</label>
+              <label className="block text-sm font-semibold text-text mb-1.5">Add a cover photo *</label>
               <div className="flex flex-col gap-2 rounded-lg border border-gray-200 p-4 bg-gray-50/50">
                 <input
                   type="file"
@@ -130,18 +130,18 @@ export default function NewCampaignPage() {
                   }}
                   className="text-sm text-text-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary-light file:text-secondary hover:file:bg-secondary/20 file:cursor-pointer"
                 />
-                <p className="text-[10px] text-text-muted">Supports JPG, PNG, GIF up to 5MB.</p>
+                <p className="text-[10px] text-text-muted">Choose a photo that captures your campaign. Supports JPG, PNG, GIF up to 5MB.</p>
                 {imageError && <p className="text-xs text-red-600 mt-0.5">{imageError}</p>}
               </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <Input label="Goal Amount ($)" type="number" min="10" {...register("goal_amount")} error={errors.goal_amount?.message} />
-              <Select label="Category" options={[{ value: "", label: "Select category" }, ...categories]} {...register("category_id")} error={errors.category_id?.message} />
+              <Input label="How much do you need to raise?" type="number" min="10" placeholder="Enter amount in USD" {...register("goal_amount")} error={errors.goal_amount?.message} />
+              <Select label="Choose a category" options={[{ value: "", label: "Select category" }, ...categories]} {...register("category_id")} error={errors.category_id?.message} />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Input label="Location" {...register("location")} error={errors.location?.message} />
-              <Input label="End Date" type="date" {...register("end_date")} />
+              <Input label="Where is this campaign located?" placeholder="City, region" {...register("location")} error={errors.location?.message} />
+              <Input label="When should it end?" type="date" {...register("end_date")} />
             </div>
             {error && <p className="text-sm text-red-600 rounded-lg bg-red-50 p-3">{error}</p>}
             <div className="flex gap-3">
@@ -149,7 +149,7 @@ export default function NewCampaignPage() {
               <Button type="button" variant="ghost" onClick={() => router.back()}>Cancel</Button>
             </div>
             <p className="text-xs text-text-muted mt-2">
-              Your campaign will be reviewed by our team before going live.
+              Your campaign will be reviewed by our team before going live. This helps ensure all campaigns are legitimate and trustworthy.
             </p>
           </form>
         </CardContent>

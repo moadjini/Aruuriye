@@ -25,9 +25,9 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
   const days = daysRemaining(campaign.end_date);
 
   return (
-    <Card className="overflow-hidden p-0 h-full flex flex-col hover:border-secondary/20 transition-colors">
+    <Card className="overflow-hidden p-0 h-full flex flex-col hover:border-secondary/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-premium-hover w-full animate-scale-in">
       <Link href={`/campaigns/${campaign.slug}`} className="flex flex-1 flex-col">
-        <div className="relative h-44 w-full bg-slate-100">
+        <div className="relative h-48 sm:h-52 md:h-56 w-full bg-slate-100">
           {campaign.cover_image_url ? (
             <Image src={campaign.cover_image_url} alt={campaign.title} fill className="object-cover" />
           ) : (
@@ -42,10 +42,10 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
           )}
         </div>
 
-        <div className="flex flex-1 flex-col p-4">
-          <h3 className="line-clamp-2 font-semibold text-text hover:text-secondary transition-colors text-sm sm:text-base leading-snug">{campaign.title}</h3>
+        <div className="flex flex-1 flex-col p-4 sm:p-5">
+          <h3 className="line-clamp-2 font-semibold text-text hover:text-secondary transition-colors text-sm sm:text-base leading-snug break-words">{campaign.title}</h3>
           {campaign.profiles && (
-            <div className="mt-1 flex items-center text-xs text-text-muted">
+            <div className="mt-1 flex items-center text-xs text-text-muted flex-wrap gap-2">
               <span>by {campaign.profiles.full_name || "Anonymous"}</span>
               <VerificationBadge level={campaign.profiles.verification_level} />
             </div>
@@ -57,14 +57,14 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
               <span className="text-text-muted">of {formatCurrency(campaign.goal_amount)}</span>
             </div>
           </div>
-          <div className="mt-auto pt-3 flex gap-3 text-xs text-text-muted border-t border-gray-50/80">
+          <div className="mt-auto pt-3 flex flex-wrap gap-2 sm:gap-3 text-xs text-text-muted border-t border-gray-50/80">
             <span className="flex items-center gap-1"><Users className="h-3 w-3" />{campaign.donor_count}</span>
             <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{campaign.location}</span>
             {days !== null && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{days}d left</span>}
           </div>
         </div>
       </Link>
-      <div className="border-t border-gray-50/80 px-4 py-2 flex justify-between items-center bg-slate-50/50">
+      <div className="border-t border-gray-50/80 px-4 py-2 sm:px-5 flex justify-between items-center bg-slate-50/50">
         <ShareButton slug={campaign.slug} title={campaign.title} variant="link" />
       </div>
     </Card>

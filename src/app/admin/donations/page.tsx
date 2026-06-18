@@ -43,17 +43,17 @@ export default function AdminDonationsPage() {
 
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-text">Manage Donations</h1>
+    <div className="animate-fade-in">
+      <h1 className="text-2xl font-bold text-text animate-slide-up" style={{ animationDelay: "0.1s" } as React.CSSProperties}>Manage Donations</h1>
       <div className="mt-6 space-y-3">
-        {donations.map((d) => (
-          <div key={d.id as string} className="cursor-pointer" onClick={() => window.location.href = `/admin/donations/${d.id as string}`}>
-            <Card className="hover:shadow-md transition-shadow">
+        {donations.map((d, index) => (
+          <div key={d.id as string} className="cursor-pointer animate-slide-in-right" style={{ animationDelay: `${0.2 + index * 0.05}s` } as React.CSSProperties} onClick={() => window.location.href = `/admin/donations/${d.id as string}`}>
+            <Card className="hover:shadow-premium-hover hover:-translate-y-0.5 transition-all duration-300">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4">
                 <div>
                   <p className="font-medium">{d.donor_name as string} · {formatCurrency(d.amount as number)}</p>
                   <p className="text-sm text-text-muted">
-                    {(d.campaigns as { title: string })?.title} · Ref: {d.transaction_reference as string} · {formatDate(d.created_at as string)}
+                    {(d.campaigns as { title: string })?.title} · {formatDate(d.created_at as string)}
                   </p>
                   <p className="text-sm text-text-muted">Phone: {d.donor_phone as string}</p>
                 </div>

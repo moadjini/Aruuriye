@@ -49,12 +49,12 @@ export default function AdminWithdrawalsPage() {
 
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-text">Manage Withdrawals</h1>
+    <div className="animate-fade-in">
+      <h1 className="text-2xl font-bold text-text animate-slide-up" style={{ animationDelay: "0.1s" } as React.CSSProperties}>Manage Withdrawals</h1>
       <div className="mt-6 space-y-3">
-        {withdrawals.map((w) => (
-          <div key={w.id as string} className="cursor-pointer" onClick={() => window.location.href = `/admin/withdrawals/${w.id as string}`}>
-            <Card className="hover:shadow-md transition-shadow">
+        {withdrawals.map((w, index) => (
+          <div key={w.id as string} className="cursor-pointer animate-slide-in-right" style={{ animationDelay: `${0.2 + index * 0.05}s` } as React.CSSProperties} onClick={() => window.location.href = `/admin/withdrawals/${w.id as string}`}>
+            <Card className="hover:shadow-premium-hover hover:-translate-y-0.5 transition-all duration-300">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4">
                 <div>
                   <p className="font-medium">{w.full_name as string} · {formatCurrency(w.amount as number)}</p>

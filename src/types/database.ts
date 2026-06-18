@@ -84,7 +84,6 @@ export interface Donation {
   donor_name: string;
   donor_phone: string;
   amount: number;
-  transaction_reference: string;
   payment_method: PaymentMethod;
   status: DonationStatus;
   is_anonymous: boolean;

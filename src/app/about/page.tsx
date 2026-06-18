@@ -12,18 +12,22 @@ export default function AboutPage() {
 
       <section id="verification" className="mt-12">
         <h2 className="text-2xl font-bold flex items-center gap-2"><Shield className="h-6 w-6 text-secondary" /> Verification System</h2>
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          {[
-            { level: "Level 1", title: "Phone Verified", desc: "Phone number confirmed via SMS" },
-            { level: "Level 2", title: "Identity Verified", desc: "National ID or official documents reviewed" },
-            { level: "Level 3", title: "Trusted Fundraiser", desc: "Proven track record with successful campaigns" },
-          ].map((v) => (
-            <div key={v.level} className="rounded-xl border p-5">
-              <p className="text-xs font-medium text-secondary">{v.level}</p>
-              <h3 className="mt-1 font-semibold">{v.title}</h3>
-              <p className="mt-2 text-sm text-text-muted">{v.desc}</p>
+        <div className="mt-6 rounded-xl border p-6 bg-secondary-light/20">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="rounded-full bg-blue-500 p-2">
+              <CheckCircle className="h-5 w-5 text-white" />
             </div>
-          ))}
+            <h3 className="text-lg font-semibold">Blue Checkmark Verification</h3>
+          </div>
+          <p className="text-text-muted mb-4">
+            Our single verification level ensures trust and authenticity. Verified fundraisers receive a blue checkmark badge to demonstrate their verified identity.
+          </p>
+          <ul className="space-y-2 text-sm text-text-muted">
+            <li className="flex items-start gap-2"><CheckCircle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" /> Users must complete their profile (name and profile picture)</li>
+            <li className="flex items-start gap-2"><CheckCircle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" /> Submit a National ID photo for identity verification</li>
+            <li className="flex items-start gap-2"><CheckCircle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" /> Admin reviews and approves verified fundraisers</li>
+            <li className="flex items-start gap-2"><CheckCircle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" /> Only JPEG, JPG, and PNG image formats accepted</li>
+          </ul>
         </div>
       </section>
 

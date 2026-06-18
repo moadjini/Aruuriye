@@ -39,7 +39,6 @@ export const donationSchema = z.object({
   donor_name: z.string().min(2, "Name is required"),
   donor_phone: z.string().min(9, "Valid phone number required"),
   amount: z.coerce.number().min(1, "Minimum donation is $1"),
-  transaction_reference: z.string().min(5, "Transaction reference is required"),
   message: z.string().optional(),
   is_anonymous: z.boolean().optional(),
 });

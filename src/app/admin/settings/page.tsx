@@ -33,26 +33,23 @@ export default function AdminSettingsPage() {
   const handleSave = async () => {
     setLoading(true);
     setMessage("");
-    const supabase = createClient();
 
-    const { error: feeError } = await supabase
-      .from("platform_settings")
-      .upsert({
-        key: "platform_fee_percent",
-        value: settings.platform_fee_percent.toString(),
-      }, { onConflict: "key" });
+    try {
+      const response = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
 
-    const { error: evcError } = await supabase
-      .from("platform_settings")
-      .upsert({
-        key: "evc_business_number",
-        value: settings.evc_business_number,
-      }, { onConflict: "key" });
+      const data = await response.json();
 
-    if (feeError || evcError) {
-      setMessage("Failed to save settings: " + (feeError?.message || evcError?.message));
-    } else {
-      setMessage("Settings saved successfully!");
+      if (data.error) {
+        setMessage("Failed to save settings: " + data.error);
+      } else {
+        setMessage("Settings saved successfully!");
+      }
+    } catch (error) {
+      setMessage("Failed to save settings: " + (error as Error).message);
     }
 
     setLoading(false);

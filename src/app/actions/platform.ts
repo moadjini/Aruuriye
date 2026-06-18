@@ -1,6 +1,14 @@
 "use server";
 
 import { createServiceClient } from "@/lib/supabase/server";
+import {
+  sendTelegramNotification,
+  notifyNewCampaign,
+  notifyNewDonation,
+  notifyVerificationRequest,
+  notifyFraudReport,
+  notifyWithdrawalRequest,
+} from "@/lib/telegram";
 
 // Helper: send notification
 export async function sendNotification(
@@ -41,6 +49,26 @@ export async function submitReportAction(
   });
 
   if (error) return { error: error.message };
+
+  // Fetch campaign and reporter details for Telegram notification
+  const { data: campaign } = await supabase
+    .from("campaigns")
+    .select("title")
+    .eq("id", campaignId)
+    .single();
+
+  let reporterName = "Anonymous";
+  if (reporterId) {
+    const { data: reporter } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", reporterId)
+      .single();
+    reporterName = reporter?.full_name || "Anonymous";
+  }
+
+  // Send Telegram notification
+  await notifyFraudReport(campaign?.title || "Unknown Campaign", reporterName, reason);
 
   // Notify admins about the new report
   const { data: admins } = await supabase
@@ -83,6 +111,16 @@ export async function submitVerificationRequestAction(
 
   if (insertError) return { error: insertError.message };
 
+  // Fetch user details for Telegram notification
+  const { data: user } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", userId)
+    .single();
+
+  // Send Telegram notification
+  await notifyVerificationRequest(user?.full_name || "Unknown User");
+
   // Update profile status (service role bypasses RLS)
   const { error: updateError } = await supabase
     .from("profiles")
@@ -98,7 +136,7 @@ export async function submitVerificationRequestAction(
   await sendNotification(
     userId,
     "Verification Request Submitted",
-    `Your request for ${level.replace("_", " ")} is under review.`,
+    "Your blue checkmark verification request is under review. Our team will verify your National ID and profile picture.",
     "info",
     "/dashboard/verification"
   );
@@ -216,8 +254,8 @@ export async function reviewVerificationAction(
     // Notify user of approval
     await sendNotification(
       userId,
-      "Verification Approved! 🎉",
-      `Your account has been promoted to Fundraiser. You can now create campaigns!`,
+      "Blue Checkmark Verified! 🎉",
+      "Congratulations! Your account has been verified with the blue checkmark. You can now create campaigns!",
       "success",
       "/dashboard"
     );
@@ -234,7 +272,7 @@ export async function reviewVerificationAction(
     await sendNotification(
       userId,
       "Verification Rejected",
-      "Your fundraiser request was rejected. Please upload a clear, valid document and re-apply.",
+      "Your verification request was rejected. Please upload a clear, valid National ID and re-apply.",
       "error",
       "/dashboard/verification"
     );
@@ -276,6 +314,16 @@ export async function createCampaignAction(campaignData: {
     .single();
 
   if (insertError) return { error: insertError.message };
+
+  // Fetch creator details for Telegram notification
+  const { data: creator } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", campaignData.creator_id)
+    .single();
+
+  // Send Telegram notification
+  await notifyNewCampaign(campaignData.title, creator?.full_name || "Unknown", campaignData.goal_amount);
 
   // Notify creator
   await sendNotification(
@@ -365,7 +413,6 @@ export async function submitDonationAction(donationData: {
   donor_name: string;
   donor_phone: string;
   amount: number;
-  transaction_reference: string;
   message?: string;
   is_anonymous?: boolean;
 }) {
@@ -379,7 +426,7 @@ export async function submitDonationAction(donationData: {
 
   if (insertError) return { error: insertError.message };
 
-  // Fetch campaign details to notify fundraiser
+  // Fetch campaign details to notify fundraiser and send Telegram notification
   const { data: campaign } = await supabase
     .from("campaigns")
     .select("creator_id, title")
@@ -387,6 +434,13 @@ export async function submitDonationAction(donationData: {
     .single();
 
   if (campaign) {
+    // Send Telegram notification
+    await notifyNewDonation(
+      donationData.donor_name,
+      donationData.amount,
+      campaign.title
+    );
+
     await sendNotification(
       campaign.creator_id,
       "New Pending Donation 💰",
@@ -500,6 +554,16 @@ export async function submitWithdrawalAction(withdrawalData: {
   });
 
   if (insertError) return { error: insertError.message };
+
+  // Fetch campaign details for Telegram notification
+  const { data: campaign } = await supabase
+    .from("campaigns")
+    .select("title")
+    .eq("id", withdrawalData.campaign_id)
+    .single();
+
+  // Send Telegram notification
+  await notifyWithdrawalRequest(withdrawalData.full_name, withdrawalData.amount, campaign?.title || "Unknown Campaign");
 
   // Notify user
   await sendNotification(
