@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, ArrowRight, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -59,24 +59,30 @@ export function DonateForm({ campaignId, campaignTitle }: DonateFormProps) {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    const res = await submitDonationAction({
-      campaign_id: campaignId,
-      donor_id: user?.id || null,
-      donor_name: data.donor_name,
-      donor_phone: data.donor_phone,
-      amount: Number(data.amount),
-      message: data.message,
-      is_anonymous: data.is_anonymous || false,
-    });
+    try {
+      const res = await submitDonationAction({
+        campaign_id: campaignId,
+        donor_id: user?.id || null,
+        donor_name: data.donor_name,
+        donor_phone: data.donor_phone,
+        amount: Number(data.amount),
+        message: data.message,
+        is_anonymous: data.is_anonymous || false,
+      });
 
-    if (res.error) {
-      setError(res.error);
+      if (res.error) {
+        setError(res.error);
+        setLoading(false);
+        return;
+      }
+
+      setStep("success");
+    } catch (err) {
+      console.error("Donation error:", err);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setStep("success");
-    setLoading(false);
   };
 
   if (step === "success") {
@@ -111,6 +117,10 @@ export function DonateForm({ campaignId, campaignTitle }: DonateFormProps) {
     <div className="mt-4 animate-fade-in">
       {step === "amount" && (
         <div className="space-y-4">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center font-bold">1</div>
+            <span className="text-sm font-medium">Choose your donation amount</span>
+          </div>
           <Input
             label="How much would you like to give?"
             type="number"
@@ -140,7 +150,7 @@ export function DonateForm({ campaignId, campaignTitle }: DonateFormProps) {
             ))}
           </div>
           <Button className="w-full mt-2" onClick={() => setStep("submit")} disabled={!amount || amount <= 0}>
-            Continue with ${amount}
+            Continue <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       )}
@@ -149,11 +159,23 @@ export function DonateForm({ campaignId, campaignTitle }: DonateFormProps) {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <input type="hidden" {...register("amount", { valueAsNumber: true })} />
 
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center font-bold">2</div>
+            <span className="text-sm font-medium">Complete your donation</span>
+          </div>
+
           {/* EVC Payment Instructions */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-            <h4 className="font-semibold text-blue-900 mb-2">Here's how to donate</h4>
-            <p className="text-sm text-blue-800 mb-3">Transfer <strong>${amount}</strong> to the EVC Plus number below:</p>
-            <div className="flex items-center gap-2 bg-white border border-blue-300 rounded-lg p-3">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-5">
+            <div className="flex items-start gap-3 mb-3">
+              <Info className="h-5 w-5 text-blue-600 mt-0.5" />
+              <div>
+                <h4 className="font-semibold text-blue-900 mb-1">Here's how to donate</h4>
+                <p className="text-sm text-blue-800">
+                  Transfer <strong>${amount}</strong> to the EVC Plus number below. This is a secure payment method used in Somalia.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 bg-white border border-blue-300 rounded-lg p-3 mb-3">
               <span className="text-xl font-bold text-blue-900 flex-1">{evcNumber}</span>
               <button
                 type="button"
@@ -163,7 +185,11 @@ export function DonateForm({ campaignId, campaignTitle }: DonateFormProps) {
                 <Copy className="h-5 w-5" />
               </button>
             </div>
-            <p className="text-xs text-blue-700 mt-2">After you've made the transfer, please fill in your details below so we can verify your donation.</p>
+            <div className="bg-white/50 rounded-lg p-3 border border-blue-200">
+              <p className="text-xs text-blue-700">
+                <strong>After transferring:</strong> Please fill in your details below so we can verify your donation and add it to the campaign progress.
+              </p>
+            </div>
           </div>
 
           <Input label="Your name" placeholder="Enter your full name" {...register("donor_name")} error={errors.donor_name?.message} />

@@ -35,7 +35,7 @@ export default async function DonationsPage() {
               <div>
                 <p className="font-medium">{d.is_anonymous ? "Anonymous" : d.donor_name}</p>
                 <p className="text-sm text-text-muted">
-                  {d.campaigns?.title} · {formatDate(d.created_at)} · Ref: {d.transaction_reference}
+                  {d.campaigns?.title} · {formatDate(d.created_at)}
                 </p>
               </div>
               <div className="text-right">

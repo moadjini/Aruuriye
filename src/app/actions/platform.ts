@@ -144,6 +144,28 @@ export async function submitVerificationRequestAction(
   return { success: true };
 }
 
+// Admin: Resolve fraud report
+export async function resolveReportAction(formData: FormData) {
+  const id = formData.get("id") as string;
+  const status = formData.get("status") as string;
+  const freezeCampaign = formData.get("freezeCampaign") as string | null;
+
+  const supabase = await createServiceClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  await supabase.from("reports").update({
+    status,
+    investigated_by: user?.id,
+    resolved_at: new Date().toISOString(),
+  }).eq("id", id);
+
+  if (freezeCampaign && status === "resolved") {
+    await supabase.from("campaigns").update({ status: "frozen" }).eq("id", freezeCampaign);
+  }
+
+  return { success: true };
+}
+
 // Admin: Direct verification (create and approve)
 export async function adminVerifyUserAction(
   userId: string,
@@ -508,7 +530,7 @@ export async function verifyDonationAction(
     await sendNotification(
       campaign.creator_id,
       "Donation Rejected ❌",
-      `The $${donation.amount} donation reference (${donation.transaction_reference}) was rejected by admin.`,
+      `The $${donation.amount} donation was rejected by admin.`,
       "error",
       `/dashboard/donations`
     );
@@ -548,6 +570,32 @@ export async function submitWithdrawalAction(withdrawalData: {
 }) {
   const supabase = await createServiceClient();
 
+  // Calculate available balance for the campaign
+  const { data: donations } = await supabase
+    .from("donations")
+    .select("amount")
+    .eq("campaign_id", withdrawalData.campaign_id)
+    .eq("status", "verified");
+
+  const totalRaised = donations?.reduce((sum, d) => sum + (d.amount as number), 0) || 0;
+
+  const { data: withdrawals } = await supabase
+    .from("withdrawal_requests")
+    .select("amount")
+    .eq("campaign_id", withdrawalData.campaign_id)
+    .in("status", ["pending", "approved", "completed"]);
+
+  const totalWithdrawn = withdrawals?.reduce((sum, w) => sum + (w.amount as number), 0) || 0;
+
+  const availableBalance = totalRaised - totalWithdrawn;
+
+  // Validate that withdrawal amount doesn't exceed available balance
+  if (withdrawalData.amount > availableBalance) {
+    return { 
+      error: `Insufficient balance. Available: $${availableBalance.toFixed(2)}, Requested: $${withdrawalData.amount.toFixed(2)}` 
+    };
+  }
+
   const { error: insertError } = await supabase.from("withdrawal_requests").insert({
     ...withdrawalData,
     status: "pending",
@@ -572,6 +620,61 @@ export async function submitWithdrawalAction(withdrawalData: {
     `Your request to withdraw $${withdrawalData.amount} is pending approval.`,
     "info",
     `/dashboard/withdrawals`
+  );
+
+  return { success: true };
+}
+
+// 9. Admin: Adjust User Balance
+export async function adjustUserBalanceAction(formData: FormData) {
+  const userId = formData.get("userId") as string;
+  const amount = Number(formData.get("amount"));
+  const reason = formData.get("reason") as string;
+  const adminId = formData.get("adminId") as string;
+
+  const supabase = await createServiceClient();
+
+  // Fetch user details
+  const { data: user } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", userId)
+    .single();
+
+  if (!user) {
+    return { error: "User not found" };
+  }
+
+  // Insert balance adjustment record
+  const { error: insertError } = await supabase.from("balance_adjustments").insert({
+    user_id: userId,
+    amount,
+    reason,
+    adjusted_by: adminId,
+  });
+
+  if (insertError) {
+    // If table doesn't exist, we need to create it or handle differently
+    console.error("Error inserting balance adjustment:", insertError);
+    return { error: "Failed to record balance adjustment" };
+  }
+
+  // Log the admin action
+  await supabase.from("admin_logs").insert({
+    admin_id: adminId,
+    action: "balance_adjustment",
+    entity_type: "user",
+    entity_id: userId,
+    details: { amount, reason },
+  });
+
+  // Send notification to user
+  await sendNotification(
+    userId,
+    amount > 0 ? "Balance Increased 💰" : "Balance Decreased",
+    `Your balance has been ${amount > 0 ? "increased" : "decreased"} by $${Math.abs(amount).toFixed(2)}. Reason: ${reason}`,
+    amount > 0 ? "success" : "warning",
+    "/dashboard/balance"
   );
 
   return { success: true };
