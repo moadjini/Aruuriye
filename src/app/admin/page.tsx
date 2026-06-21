@@ -65,7 +65,7 @@ export default async function AdminDashboard() {
 
       <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <div className="animate-slide-up" style={{ animationDelay: "0.7s" } as React.CSSProperties}>
-          <StatCard title="Platform Earnings" value={formatCurrency(platformEarnings)} icon={DollarSign} subtitle="5% of verified donations" className="bg-secondary-light/30 border-secondary/20" />
+          <StatCard title="Platform Earnings" value={formatCurrency(platformEarnings)} icon={DollarSign} subtitle="5% of verified donations" />
         </div>
         <div className="animate-slide-up" style={{ animationDelay: "0.8s" } as React.CSSProperties}>
           <StatCard title="Today's Earnings" value={formatCurrency(todayEarnings)} icon={DollarSign} subtitle="5% of today's verified donations" />
