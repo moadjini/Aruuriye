@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -6,11 +6,15 @@ import { formatDate } from "@/lib/utils";
 import { resolveReportAction } from "@/app/actions/platform";
 
 export default async function AdminReportsPage() {
-  const supabase = await createClient();
-  const { data: reports } = await supabase
+  const supabase = await createServiceClient();
+  const { data: reports, error } = await supabase
     .from("reports")
     .select("*, campaigns(title, slug), profiles(full_name)")
     .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching reports:", error.message || error);
+  }
 
   return (
     <div className="w-full animate-fade-in">

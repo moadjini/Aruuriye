@@ -172,70 +172,72 @@ export async function adminVerifyUserAction(
 ) {
   const supabase = await createServiceClient();
 
-  // Check for existing pending request
-  const { data: existingRequest } = await supabase
-    .from("verification_requests")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("status", "pending")
-    .single();
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .update({ verification_level: level, verification_status: "verified" })
+    .eq("id", userId);
 
-  let requestId = existingRequest?.id;
-
-  if (!requestId) {
-    // Create new verification request
-    const { data: newRequest, error: insertError } = await supabase
-      .from("verification_requests")
-      .insert({
-        user_id: userId,
-        requested_level: level,
-        document_type: "national_id",
-        document_url: "",
-        status: "pending",
-      })
-      .select("id")
-      .single();
-
-    if (insertError) return { error: insertError.message };
-    requestId = newRequest?.id;
+  if (profileError) {
+    return { error: profileError.message };
   }
 
-  if (requestId) {
-    // Approve the request
-    const { error: requestError } = await supabase
-      .from("verification_requests")
-      .update({
-        status: "verified",
-        reviewed_by: adminId,
-        reviewed_at: new Date().toISOString(),
-      })
-      .eq("id", requestId);
+  // Log the action
+  await supabase.from("admin_logs").insert({
+    admin_id: adminId,
+    action: "verify_user",
+    entity_type: "user",
+    entity_id: userId,
+    details: { level },
+  });
 
-    if (requestError) return { error: requestError.message };
-
-    // Update user profile
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({
-        verification_level: level,
-        verification_status: "verified",
-        role: "fundraiser",
-      })
-      .eq("id", userId);
-
-    if (updateError) return { error: updateError.message };
-
-    // Notify user
-    await sendNotification(
-      userId,
-      "Verification Approved! 🎉",
-      `Your account has been verified to ${level.replace("_", " ")} by an administrator.`,
-      "success",
-      "/dashboard/verification"
-    );
-  }
+  // Send notification
+  await sendNotification(
+    userId,
+    "Account Verified",
+    `Your account has been verified at level ${level}.`,
+    "success"
+  );
 
   return { success: true };
+}
+
+// Auto-feature campaigns based on engagement
+export async function autoFeatureCampaignsAction() {
+  const supabase = await createServiceClient();
+
+  // Calculate engagement score for active campaigns
+  const { data: campaigns } = await supabase
+    .from("campaigns")
+    .select("id, raised_amount, donor_count, view_count, goal_amount")
+    .eq("status", "active");
+
+  if (!campaigns) return { success: true };
+
+  // Calculate engagement score and sort
+  const campaignScores = campaigns.map((c) => {
+    const raisedRatio = (c.raised_amount as number) / (c.goal_amount as number);
+    const engagementScore = (c.donor_count as number) * 10 + (c.view_count as number) * 0.1 + raisedRatio * 100;
+    return { id: c.id, score: engagementScore };
+  }).sort((a, b) => b.score - a.score);
+
+  // Feature top 5 campaigns
+  const topCampaigns = campaignScores.slice(0, 5);
+  const topIds = topCampaigns.map((c) => c.id);
+
+  // Update featured status
+  await supabase
+    .from("campaigns")
+    .update({ is_featured: true })
+    .in("id", topIds);
+
+  // Unfeature others
+  await supabase
+    .from("campaigns")
+    .update({ is_featured: false })
+    .eq("status", "active")
+    .not("id", "in", `(${topIds.join(",")})`);
+
+  return { success: true, featured: topIds.length };
 }
 
 // 2. Review Verification Request (Admin)

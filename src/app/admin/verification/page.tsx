@@ -29,7 +29,7 @@ export default function AdminVerificationPage() {
 
   useEffect(() => { load(); }, []);
 
-  const review = async (id: string, userId: string, status: string, level: string) => {
+  const review = async (id: string, userId: string, status: string) => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -37,7 +37,7 @@ export default function AdminVerificationPage() {
       return;
     }
 
-    const result = await reviewVerificationAction(id, userId, status, level, user.id);
+    const result = await reviewVerificationAction(id, userId, status, "verified", user.id);
     
     if (result.error) {
       alert("Failed to review verification: " + result.error);
@@ -59,19 +59,21 @@ export default function AdminVerificationPage() {
                 <div>
                   <p className="font-medium">{(r.profiles as { full_name: string })?.full_name}</p>
                   <p className="text-sm text-text-muted">
-                    Level: {r.requested_level as string} · Doc: {r.document_type as string}
+                    Document: {r.document_type as string}
                   </p>
-                  <a href={r.document_url as string} target="_blank" rel="noopener" className="text-sm text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
-                    View Document
-                  </a>
+                  {(r.document_url as string) && (
+                    <a href={r.document_url as string} target="_blank" rel="noopener noreferrer" className="text-sm text-secondary hover:underline font-medium" onClick={(e) => e.stopPropagation()}>
+                      View Document
+                    </a>
+                  )}
                   <p className="text-xs text-text-muted mt-1">{formatDate(r.created_at as string)}</p>
                 </div>
                 <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                   <Badge className="bg-gray-100">{r.status as string}</Badge>
                   {r.status === "pending" && (
                     <>
-                      <Button size="sm" onClick={() => review(r.id as string, r.user_id as string, "verified", r.requested_level as string)}>Approve</Button>
-                      <Button size="sm" variant="danger" onClick={() => review(r.id as string, r.user_id as string, "rejected", "none")}>Reject</Button>
+                      <Button size="sm" onClick={() => review(r.id as string, r.user_id as string, "verified")}>Approve</Button>
+                      <Button size="sm" variant="danger" onClick={() => review(r.id as string, r.user_id as string, "rejected")}>Reject</Button>
                     </>
                   )}
                 </div>

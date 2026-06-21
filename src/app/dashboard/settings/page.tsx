@@ -9,9 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { profileSchema } from "@/lib/validations";
 import { createClient } from "@/lib/supabase/client";
 import { VerificationBadge } from "@/components/ui/verification-badge";
+import { User, Camera } from "lucide-react";
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [profile, setProfile] = useState<Record<string, string> | null>(null);
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(profileSchema),
@@ -29,6 +31,44 @@ export default function SettingsPage() {
       });
     });
   }, [reset]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setUploading(false);
+      return;
+    }
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+    const filePath = `avatars/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file);
+
+    if (uploadError) {
+      alert("Failed to upload avatar: " + uploadError.message);
+      setUploading(false);
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
+
+    const { error: updateError } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id);
+
+    if (updateError) {
+      alert("Failed to update profile: " + updateError.message);
+    } else {
+      alert("Avatar updated successfully!");
+      setProfile({ ...profile, avatar_url: publicUrl });
+    }
+
+    setUploading(false);
+  };
 
   const onSubmit = async (data: { full_name: string; phone_number: string; city: string }) => {
     setLoading(true);
@@ -70,6 +110,35 @@ export default function SettingsPage() {
       <Card className="mt-6 animate-slide-up">
         <CardHeader><CardTitle>Profile</CardTitle></CardHeader>
         <CardContent>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="relative">
+              {profile?.avatar_url ? (
+                <img 
+                  src={profile.avatar_url} 
+                  alt="Profile" 
+                  className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-secondary-light/50 flex items-center justify-center border-2 border-gray-200">
+                  <User className="h-8 w-8 text-secondary" />
+                </div>
+              )}
+              <label className="absolute bottom-0 right-0 bg-secondary text-white p-1.5 rounded-full cursor-pointer hover:bg-secondary/90 transition-colors">
+                <Camera className="h-4 w-4" />
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={handleAvatarUpload}
+                  disabled={uploading}
+                />
+              </label>
+            </div>
+            <div>
+              <p className="font-medium text-text">{profile?.full_name || "Your Name"}</p>
+              <p className="text-sm text-text-muted">{profile?.email}</p>
+            </div>
+          </div>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Input label="Full Name" {...register("full_name")} error={errors.full_name?.message as string} />
             <Input label="Phone Number" {...register("phone_number")} error={errors.phone_number?.message as string} />

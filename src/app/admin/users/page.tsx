@@ -8,12 +8,60 @@ import { formatDate } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { VerificationBadge } from "@/components/ui/verification-badge";
 
-export default function AdminUsersPage() {
-  const [users, setUsers] = useState<Record<string, unknown>[]>([]);
+interface UserExtended extends Record<string, unknown> {
+  id: string;
+  full_name: string | null;
+  email: string;
+  phone_number: string | null;
+  city: string | null;
+  role: string;
+  verification_level: string;
+  verification_status: string;
+  is_banned: boolean;
+  created_at: string;
+  total_campaigns?: number;
+  total_donations?: number;
+  total_raised?: number;
+}
 
-  const load = () => {
+export default function AdminUsersPage() {
+  const [users, setUsers] = useState<UserExtended[]>([]);
+
+  const load = async () => {
     const supabase = createClient();
-    supabase.from("profiles").select("*").order("created_at", { ascending: false }).then(({ data }) => setUsers(data || []));
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!profiles) return;
+
+    // Get additional stats for each user
+    const usersWithStats = await Promise.all(
+      profiles.map(async (profile) => {
+        const { data: campaigns } = await supabase
+          .from("campaigns")
+          .select("id")
+          .eq("creator_id", profile.id);
+
+        const { data: donations } = await supabase
+          .from("donations")
+          .select("amount")
+          .eq("donor_id", profile.id)
+          .eq("status", "verified");
+
+        const totalRaised = donations?.reduce((sum, d) => sum + (d.amount as number), 0) || 0;
+
+        return {
+          ...profile,
+          total_campaigns: campaigns?.length || 0,
+          total_donations: donations?.length || 0,
+          total_raised: totalRaised,
+        } as UserExtended;
+      })
+    );
+
+    setUsers(usersWithStats);
   };
 
   useEffect(() => { load(); }, []);
@@ -66,7 +114,7 @@ export default function AdminUsersPage() {
     load();
   };
 
-  const verifyUser = async (id: string, level: string) => {
+  const verifyUser = async (id: string) => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -77,12 +125,12 @@ export default function AdminUsersPage() {
     try {
       // Use the server action to verify user
       const { adminVerifyUserAction } = await import("@/app/actions/platform");
-      const result = await adminVerifyUserAction(id, level, user.id);
+      const result = await adminVerifyUserAction(id, "verified", user.id);
       
       if (result.error) {
         alert("Failed to verify user: " + result.error);
       } else {
-        alert(`User verified to ${level} successfully!`);
+        alert(`User verified successfully!`);
         load();
       }
     } catch (error: any) {
@@ -96,35 +144,65 @@ export default function AdminUsersPage() {
       <div className="mt-6 space-y-3">
         {users.map((u) => {
           return (
-            <Card key={u.id as string} className="transition-all duration-300 hover:shadow-premium-hover animate-slide-in-right">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium text-text">{u.full_name as string || u.email as string}</p>
-                    <Badge className="bg-slate-100 text-text text-xs">{u.role as string}</Badge>
-                    <VerificationBadge level={u.verification_level as string} />
-                    {(u.is_banned as boolean) && <Badge className="bg-red-100 text-red-700 text-xs">Banned</Badge>}
+            <Card key={u.id} className="transition-all duration-300 hover:shadow-premium-hover animate-slide-in-right">
+              <div className="flex flex-col gap-4 p-4">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                  <div className="flex items-start gap-3 flex-1">
+                    {(u.avatar_url as string) && (
+                      <img 
+                        src={u.avatar_url as string} 
+                        alt={u.full_name || "Profile"} 
+                        className="w-12 h-12 rounded-full object-cover border-2 border-gray-200 cursor-pointer hover:scale-105 transition-transform"
+                        onClick={() => window.open(u.avatar_url as string, '_blank')}
+                      />
+                    )}
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <p className="font-medium text-text">{u.full_name || u.email}</p>
+                        <Badge className="bg-slate-100 text-text text-xs">{u.role}</Badge>
+                        <VerificationBadge level={u.verification_level} />
+                        {u.is_banned && <Badge className="bg-red-100 text-red-700 text-xs">Banned</Badge>}
+                      </div>
+                      <p className="text-sm text-text-muted">{u.email}</p>
+                      {u.phone_number && <p className="text-sm text-text-muted">{u.phone_number}</p>}
+                      <p className="text-xs text-text-muted mt-1">
+                        {u.city} · Joined {formatDate(u.created_at)}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-sm text-text-muted mt-1">{u.email as string} · {u.city as string} · {formatDate(u.created_at as string)}</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {u.verification_level === "none" && (
+                      <Button size="sm" variant="outline" onClick={() => verifyUser(u.id)}>Verify</Button>
+                    )}
+                    {u.verification_level !== "none" && (
+                      <Button size="sm" variant="outline" onClick={() => verifyUser(u.id)}>Unverify</Button>
+                    )}
+                    {u.role === "visitor" && (
+                      <Button size="sm" variant="secondary" onClick={() => changeRole(u.id, "fundraiser")}>Make Fundraiser</Button>
+                    )}
+                    {u.role === "fundraiser" && (
+                      <Button size="sm" variant="outline" onClick={() => changeRole(u.id, "visitor")}>Make Visitor</Button>
+                    )}
+                    {u.is_banned ? (
+                      <Button size="sm" onClick={() => banUser(u.id, false)}>Unban</Button>
+                    ) : (
+                      <Button size="sm" variant="danger" onClick={() => banUser(u.id, true)}>Ban</Button>
+                    )}
+                  </div>
                 </div>
-                <div className="flex gap-2 flex-wrap">
-                  {(u.verification_level as string) === "none" && (
-                    <Button size="sm" variant="outline" onClick={() => verifyUser(u.id as string, "level_1")}>Verify</Button>
-                  )}
-                  {(u.verification_level as string) !== "none" && (
-                    <Button size="sm" variant="outline" onClick={() => verifyUser(u.id as string, "none")}>Unverify</Button>
-                  )}
-                  {(u.role as string) === "visitor" && (
-                    <Button size="sm" variant="secondary" onClick={() => changeRole(u.id as string, "fundraiser")}>Make Fundraiser</Button>
-                  )}
-                  {(u.role as string) === "fundraiser" && (
-                    <Button size="sm" variant="outline" onClick={() => changeRole(u.id as string, "visitor")}>Make Visitor</Button>
-                  )}
-                  {(u.is_banned as boolean) ? (
-                    <Button size="sm" onClick={() => banUser(u.id as string, false)}>Unban</Button>
-                  ) : (
-                    <Button size="sm" variant="danger" onClick={() => banUser(u.id as string, true)}>Ban</Button>
-                  )}
+                <div className="grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-secondary">{u.total_campaigns || 0}</p>
+                    <p className="text-xs text-text-muted">Campaigns</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-secondary">{u.total_donations || 0}</p>
+                    <p className="text-xs text-text-muted">Donations</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-secondary">${(u.total_raised || 0).toLocaleString()}</p>
+                    <p className="text-xs text-text-muted">Total Raised</p>
+                  </div>
                 </div>
               </div>
             </Card>

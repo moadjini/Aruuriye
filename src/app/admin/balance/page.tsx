@@ -44,7 +44,7 @@ export default function AdminBalancePage() {
         const { data: campaigns } = await supabase
           .from("campaigns")
           .select("id")
-          .eq("fundraiser_id", user.id);
+          .eq("creator_id", user.id);
 
         const campaignIds = campaigns?.map((c) => c.id) || [];
 

@@ -43,6 +43,27 @@ export default function AdminCampaignsPage() {
     }
   };
 
+  const toggleFeatured = async (id: string, currentFeatured: boolean) => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      alert("You must be logged in to perform this action");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("campaigns")
+      .update({ is_featured: !currentFeatured })
+      .eq("id", id);
+
+    if (error) {
+      alert("Failed to update featured status: " + error.message);
+    } else {
+      alert(`Campaign ${!currentFeatured ? "featured" : "unfeatured"} successfully!`);
+      load();
+    }
+  };
+
 
   return (
     <div className="animate-fade-in">
@@ -63,6 +84,7 @@ export default function AdminCampaignsPage() {
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold">{c.title as string}</h3>
                     <Badge className={getStatusColor(c.status as string)}>{c.status as string}</Badge>
+                    {(c.is_featured as boolean) && <Badge className="bg-yellow-100 text-yellow-800">Featured</Badge>}
                   </div>
                   <p className="text-sm text-text-muted mt-1">
                     {(c.profiles as { full_name: string })?.full_name} · {(c.categories as { name: string })?.name} · {formatDate(c.created_at as string)}
@@ -70,6 +92,9 @@ export default function AdminCampaignsPage() {
                   <p className="text-sm mt-1">Goal: {formatCurrency(c.goal_amount as number)}</p>
                 </div>
                 <div className="flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
+                  <Button size="sm" variant={c.is_featured ? "secondary" : "outline"} onClick={() => toggleFeatured(c.id as string, c.is_featured as boolean)}>
+                    {c.is_featured ? "Unfeature" : "Feature"}
+                  </Button>
                   {c.status === "pending_review" && (
                     <>
                       <Button size="sm" onClick={() => updateStatus(c.id as string, "active")}>Approve</Button>
