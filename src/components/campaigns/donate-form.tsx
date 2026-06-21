@@ -169,7 +169,7 @@ export function DonateForm({ campaignId, campaignTitle }: DonateFormProps) {
             <div className="flex items-start gap-3 mb-3">
               <Info className="h-5 w-5 text-blue-600 mt-0.5" />
               <div>
-                <h4 className="font-semibold text-blue-900 mb-1">Here's how to donate</h4>
+                <h4 className="font-semibold text-blue-900 mb-1">Here&apos;s how to donate</h4>
                 <p className="text-sm text-blue-800">
                   Transfer <strong>${amount}</strong> to the EVC Plus number below. This is a secure payment method used in Somalia.
                 </p>
@@ -197,7 +197,7 @@ export function DonateForm({ campaignId, campaignTitle }: DonateFormProps) {
           <Textarea label="Add a message (optional)" placeholder="Share a few words of encouragement..." {...register("message")} />
           <label className="flex items-center gap-2 text-sm text-text-muted cursor-pointer select-none">
             <input type="checkbox" {...register("is_anonymous")} className="rounded border-gray-300 text-secondary focus:ring-secondary cursor-pointer" />
-            I'd like to donate anonymously
+            I&apos;d like to donate anonymously
           </label>
           {error && <p className="text-sm text-red-600 rounded-lg bg-red-50 p-3">{error}</p>}
           <Button type="submit" className="w-full animate-fade-in" loading={loading}>

@@ -103,7 +103,7 @@ export default function NewCampaignPage() {
 
   return (
     <div className="max-w-2xl animate-fade-in">
-      <h1 className="text-2xl font-bold text-text">Let's Create Your Campaign</h1>
+      <h1 className="text-2xl font-bold text-text">Let&apos;s Create Your Campaign</h1>
       <p className="mt-1 text-text-muted">Tell your story and start raising funds for your cause</p>
 
       <Card className="mt-6 shadow-sm border border-gray-150 animate-slide-up">
