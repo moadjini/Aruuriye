@@ -511,13 +511,18 @@ export async function verifyDonationAction(
   // Fetch donation details
   const { data: donation } = await supabase
     .from("donations")
-    .select("*, campaigns(creator_id, title)")
+    .select("*, campaigns(creator_id, title, raised_amount, donor_count)")
     .eq("id", donationId)
     .single();
 
   if (!donation) return { error: "Donation not found" };
 
-  const campaign = donation.campaigns as unknown as { creator_id: string; title: string };
+  const campaign = donation.campaigns as unknown as { 
+    creator_id: string; 
+    title: string; 
+    raised_amount: number; 
+    donor_count: number;
+  };
 
   // Update donation status
   const { error: updateError } = await supabase
@@ -531,8 +536,20 @@ export async function verifyDonationAction(
 
   if (updateError) return { error: updateError.message };
 
-  // Notify creator
+  // Update campaign stats if verified
   if (status === "verified") {
+    const { error: campaignUpdateError } = await supabase
+      .from("campaigns")
+      .update({
+        raised_amount: (campaign.raised_amount || 0) + donation.amount,
+        donor_count: (campaign.donor_count || 0) + 1,
+      })
+      .eq("id", donation.campaign_id);
+
+    if (campaignUpdateError) {
+      console.error("Failed to update campaign stats:", campaignUpdateError);
+    }
+
     await sendNotification(
       campaign.creator_id,
       "Donation Verified! ✅",
