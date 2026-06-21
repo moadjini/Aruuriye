@@ -1,4 +1,4 @@
-export const APP_NAME = "HaddaICaawi";
+export const APP_NAME = "Aruuriye";
 export const APP_TAGLINE = "Somalia's trusted crowdfunding platform";
 export const PRIMARY_COLOR = "#2563EB";
 export const ACCENT_COLOR = "#DBEAFE";

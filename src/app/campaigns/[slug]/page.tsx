@@ -80,6 +80,28 @@ export default async function CampaignPage({
             )}
           </div>
 
+          {/* Mobile Donation Form - Shows at top on mobile */}
+          {(campaign.status === "active" || campaign.status === "verified") && (
+            <div className="lg:hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-lg">
+              <ProgressBar value={progress} showLabel />
+              <div className="mt-4 flex items-baseline justify-between">
+                <span className="text-2xl sm:text-3xl font-bold text-secondary">{formatCurrency(campaign.raised_amount)}</span>
+                <span className="text-sm text-text-muted">raised of {formatCurrency(campaign.goal_amount)}</span>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-4 text-center text-sm">
+                <div className="rounded-xl bg-gray-50 p-4 border border-gray-100">
+                  <p className="font-semibold text-text text-lg">{campaign.donor_count}</p>
+                  <p className="text-text-muted text-xs">Donors</p>
+                </div>
+                <div className="rounded-xl bg-gray-50 p-4 border border-gray-100">
+                  <p className="font-semibold text-text text-lg">{days ?? "—"}</p>
+                  <p className="text-text-muted text-xs">Days Left</p>
+                </div>
+              </div>
+              <DonateForm campaignId={campaign.id} campaignTitle={campaign.title} />
+            </div>
+          )}
+
           {/* Title & Meta */}
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
@@ -214,7 +236,7 @@ export default async function CampaignPage({
         </div>
       </div>
 
-      {/* Mobile Sticky Bottom Bar */}
+      {/* Mobile Sticky Bottom Bar - Only show if not active status */}
       {(campaign.status === "active" || campaign.status === "verified") && (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-50">
           <div className="flex items-center justify-between gap-4">

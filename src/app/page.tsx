@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CampaignCard } from "@/components/campaigns/campaign-card";
 import { SearchBar } from "@/components/campaigns/search-bar";
 import { createClient } from "@/lib/supabase/server";
-import { ShieldCheck, Heart, Sparkles, HandHelping } from "lucide-react";
+import { ShieldCheck, Heart, Sparkles, HandHelping, UserPlus, DollarSign, Shield } from "lucide-react";
 
 async function getCampaigns() {
   const supabase = await createClient();
@@ -92,6 +92,44 @@ export default async function HomePage() {
               </div>
             );
           })}
+        </section>
+
+        {/* How It Works Section */}
+        <section className="py-16 animate-fade-in" style={{ animationDelay: "0.5s" }}>
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-text mb-4">How It Works</h2>
+            <p className="text-text-muted max-w-2xl mx-auto">Start fundraising in minutes with our simple, secure process</p>
+          </div>
+          <div className="grid gap-8 md:grid-cols-3">
+            {[
+              {
+                icon: UserPlus,
+                title: "Create Your Campaign",
+                description: "Sign up, tell your story, and set your funding goal. Our team reviews every campaign for authenticity."
+              },
+              {
+                icon: DollarSign,
+                title: "Receive Donations",
+                description: "Share your campaign and receive donations via EVC Plus, Sahal, or Zaad. All donations are manually verified."
+              },
+              {
+                icon: Shield,
+                title: "Withdraw Funds",
+                description: "Once verified, withdraw your funds securely. We charge only 5% platform fee for transparency."
+              }
+            ].map((step, i) => {
+              const Icon = step.icon;
+              return (
+                <div key={i} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-premium transition-all duration-300 hover:-translate-y-1 hover:shadow-premium-hover animate-scale-in" style={{ animationDelay: `${0.6 + i * 0.1}s` }}>
+                  <div className="inline-flex rounded-xl bg-secondary-light/50 p-3 text-secondary mb-4">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-lg font-bold text-text mb-2">{step.title}</h3>
+                  <p className="text-sm text-text-muted leading-relaxed">{step.description}</p>
+                </div>
+              );
+            })}
+          </div>
         </section>
 
         {/* Active Campaigns List */}

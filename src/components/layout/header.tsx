@@ -75,7 +75,7 @@ export function Header({ profile }: HeaderProps) {
                 <Link href={profile.role === "admin" ? "/admin" : "/dashboard"} onClick={() => setMobileOpen(false)} className="py-2 text-text hover:text-secondary">
                   Dashboard
                 </Link>
-                <Link href="/dashboard/notifications" onClick={() => setMobileOpen(false)} className="py-2 text-text hover:text-secondary">
+                <Link href={profile.role === "admin" ? "/admin/notifications" : "/dashboard/notifications"} onClick={() => setMobileOpen(false)} className="py-2 text-text hover:text-secondary">
                   Notifications
                 </Link>
                 <button onClick={handleLogout} className="text-left text-red-600 py-2">

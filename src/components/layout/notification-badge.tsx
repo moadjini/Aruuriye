@@ -72,11 +72,13 @@ export function NotificationBadge({ profile }: NotificationBadgeProps) {
 
   if (!profile) return null;
 
+  const notificationsPath = profile.role === "admin" ? "/admin/notifications" : "/dashboard/notifications";
+
   return (
     <>
       {/* Bell Icon & Unread Badge */}
       <Link
-        href="/dashboard/notifications"
+        href={notificationsPath}
         className="relative flex items-center justify-center rounded-full p-2 text-text-muted hover:bg-gray-100 hover:text-text transition-colors"
       >
         <Bell className="h-5 w-5" />
@@ -109,7 +111,7 @@ export function NotificationBadge({ profile }: NotificationBadgeProps) {
             {/* Quick action link to notifications */}
             <div className="mt-2.5 flex justify-end">
               <Link
-                href="/dashboard/notifications"
+                href={notificationsPath}
                 onClick={() => setToast(null)}
                 className="text-[10px] font-bold text-secondary hover:underline uppercase tracking-wider"
               >

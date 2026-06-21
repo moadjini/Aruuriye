@@ -8,9 +8,17 @@ import { formatCurrency } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { adjustUserBalanceAction } from "@/app/actions/platform";
 
+interface UserWithBalance {
+  id: string;
+  full_name: string;
+  email: string;
+  created_at: string;
+  available_balance?: number;
+}
+
 export default function AdminBalancePage() {
-  const [users, setUsers] = useState<Record<string, unknown>[]>([]);
-  const [selectedUser, setSelectedUser] = useState<Record<string, unknown> | null>(null);
+  const [users, setUsers] = useState<UserWithBalance[]>([]);
+  const [selectedUser, setSelectedUser] = useState<UserWithBalance | null>(null);
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,7 +37,49 @@ export default function AdminBalancePage() {
       return;
     }
 
-    setUsers(data || []);
+    // Calculate balance for each user
+    const usersWithBalance = await Promise.all(
+      (data || []).map(async (user) => {
+        // Get all campaigns for this user
+        const { data: campaigns } = await supabase
+          .from("campaigns")
+          .select("id")
+          .eq("fundraiser_id", user.id);
+
+        const campaignIds = campaigns?.map((c) => c.id) || [];
+
+        if (campaignIds.length === 0) {
+          return { ...user, available_balance: 0 };
+        }
+
+        // Calculate total raised from verified donations
+        const { data: donations } = await supabase
+          .from("donations")
+          .select("amount")
+          .in("campaign_id", campaignIds)
+          .eq("status", "verified");
+
+        const totalRaised = donations?.reduce((sum, d) => sum + (d.amount as number), 0) || 0;
+
+        // Calculate total withdrawn
+        const { data: withdrawals } = await supabase
+          .from("withdrawal_requests")
+          .select("amount")
+          .in("campaign_id", campaignIds)
+          .in("status", ["pending", "approved", "completed"]);
+
+        const totalWithdrawn = withdrawals?.reduce((sum, w) => sum + (w.amount as number), 0) || 0;
+
+        const availableBalance = totalRaised - totalWithdrawn;
+
+        return {
+          ...user,
+          available_balance: availableBalance,
+        };
+      })
+    );
+
+    setUsers(usersWithBalance);
   };
 
   useEffect(() => { loadUsers(); }, []);
@@ -42,7 +92,7 @@ export default function AdminBalancePage() {
     setError("");
 
     const formData = new FormData();
-    formData.append("userId", selectedUser.id as string);
+    formData.append("userId", selectedUser.id);
     formData.append("amount", amount);
     formData.append("reason", reason);
 
@@ -65,6 +115,7 @@ export default function AdminBalancePage() {
       setAmount("");
       setReason("");
       setSelectedUser(null);
+      loadUsers(); // Refresh balances
     }
 
     setLoading(false);
@@ -81,7 +132,7 @@ export default function AdminBalancePage() {
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {users.map((user) => (
               <button
-                key={user.id as string}
+                key={user.id}
                 onClick={() => setSelectedUser(user)}
                 className={`w-full text-left p-3 rounded-lg border transition-all ${
                   selectedUser?.id === user.id
@@ -89,8 +140,16 @@ export default function AdminBalancePage() {
                     : "border-gray-200 hover:border-secondary hover:bg-secondary-light/40"
                 }`}
               >
-                <p className="font-medium">{user.full_name as string}</p>
-                <p className="text-sm text-text-muted">{user.email as string}</p>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-medium">{user.full_name}</p>
+                    <p className="text-sm text-text-muted">{user.email}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-secondary">{formatCurrency(user.available_balance || 0)}</p>
+                    <p className="text-xs text-text-muted">Available</p>
+                  </div>
+                </div>
               </button>
             ))}
           </div>
@@ -100,9 +159,17 @@ export default function AdminBalancePage() {
         {selectedUser && (
           <Card className="p-6">
             <h2 className="text-lg font-semibold mb-4">Adjust Balance</h2>
-            <p className="text-sm text-text-muted mb-4">
-              Selected: <strong>{selectedUser.full_name as string}</strong>
-            </p>
+            <div className="space-y-4 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div>
+                <p className="text-sm text-text-muted">Selected User</p>
+                <p className="font-medium">{selectedUser.full_name}</p>
+                <p className="text-sm text-text-muted">{selectedUser.email}</p>
+              </div>
+              <div className="pt-2 border-t border-gray-200">
+                <p className="text-sm text-text-muted">Current Available Balance</p>
+                <p className="text-2xl font-bold text-secondary">{formatCurrency(selectedUser.available_balance || 0)}</p>
+              </div>
+            </div>
             <form onSubmit={handleAdjustBalance} className="space-y-4">
               <Input
                 label="Amount"

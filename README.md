@@ -1,4 +1,4 @@
-# HaddaICaawi – Somali Crowdfunding Platform
+# Aruuriye – Somali Crowdfunding Platform
 
 Somalia's trusted crowdfunding platform for individuals, students, medical patients, charities, and community projects.
 
@@ -28,7 +28,7 @@ Somalia's trusted crowdfunding platform for individuals, students, medical patie
 ### 1. Clone and Install
 
 ```bash
-cd HaddaICaawi
+cd aruuriye
 npm install
 ```
 
