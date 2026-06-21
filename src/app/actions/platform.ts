@@ -162,8 +162,6 @@ export async function resolveReportAction(formData: FormData) {
   if (freezeCampaign && status === "resolved") {
     await supabase.from("campaigns").update({ status: "frozen" }).eq("id", freezeCampaign);
   }
-
-  return { success: true };
 }
 
 // Admin: Direct verification (create and approve)
