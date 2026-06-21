@@ -99,7 +99,6 @@ export default function OnboardingPage() {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             required
-            icon={<User className="h-4 w-4 text-text-muted" />}
           />
           <Input
             label="Phone Number"
@@ -107,7 +106,6 @@ export default function OnboardingPage() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             required
-            icon={<Phone className="h-4 w-4 text-text-muted" />}
           />
           <Input
             label="City"
@@ -115,7 +113,6 @@ export default function OnboardingPage() {
             value={city}
             onChange={(e) => setCity(e.target.value)}
             required
-            icon={<MapPin className="h-4 w-4 text-text-muted" />}
           />
 
           {error && <p className="text-sm text-red-600 rounded-lg bg-red-50 p-3">{error}</p>}

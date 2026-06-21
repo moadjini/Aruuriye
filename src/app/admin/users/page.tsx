@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { VerificationBadge } from "@/components/ui/verification-badge";
+import Image from "next/image";
 
 interface UserExtended extends Record<string, unknown> {
   id: string;
@@ -149,12 +150,17 @@ export default function AdminUsersPage() {
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                   <div className="flex items-start gap-3 flex-1">
                     {(u.avatar_url as string) && (
-                      <img 
-                        src={u.avatar_url as string} 
-                        alt={u.full_name || "Profile"} 
-                        className="w-12 h-12 rounded-full object-cover border-2 border-gray-200 cursor-pointer hover:scale-105 transition-transform"
+                      <div 
+                        className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-200 cursor-pointer hover:scale-105 transition-transform relative"
                         onClick={() => window.open(u.avatar_url as string, '_blank')}
-                      />
+                      >
+                        <Image 
+                          src={u.avatar_url as string} 
+                          alt={u.full_name || "Profile"} 
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
                     )}
                     <div className="flex-1">
                       <div className="flex flex-wrap items-center gap-2 mb-2">

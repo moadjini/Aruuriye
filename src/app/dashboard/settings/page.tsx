@@ -10,6 +10,7 @@ import { profileSchema } from "@/lib/validations";
 import { createClient } from "@/lib/supabase/client";
 import { VerificationBadge } from "@/components/ui/verification-badge";
 import { User, Camera } from "lucide-react";
+import Image from "next/image";
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
@@ -111,12 +112,13 @@ export default function SettingsPage() {
         <CardHeader><CardTitle>Profile</CardTitle></CardHeader>
         <CardContent>
           <div className="flex items-center gap-4 mb-6">
-            <div className="relative">
+            <div className="relative w-20 h-20">
               {profile?.avatar_url ? (
-                <img 
+                <Image 
                   src={profile.avatar_url} 
                   alt="Profile" 
-                  className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                  fill
+                  className="rounded-full object-cover border-2 border-gray-200"
                 />
               ) : (
                 <div className="w-20 h-20 rounded-full bg-secondary-light/50 flex items-center justify-center border-2 border-gray-200">
