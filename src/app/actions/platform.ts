@@ -456,20 +456,29 @@ export async function submitDonationAction(donationData: {
     .single();
 
   if (campaign) {
-    // Send Telegram notification
-    await notifyNewDonation(
-      donationData.donor_name,
-      donationData.amount,
-      campaign.title
-    );
+    // Send Telegram notification (don't fail if this fails)
+    try {
+      await notifyNewDonation(
+        donationData.donor_name,
+        donationData.amount,
+        campaign.title
+      );
+    } catch (error) {
+      console.error("Failed to send Telegram notification:", error);
+    }
 
-    await sendNotification(
-      campaign.creator_id,
-      "New Pending Donation 💰",
-      `You received a donation of $${donationData.amount} for "${campaign.title}" pending verification.`,
-      "info",
-      `/dashboard/donations`
-    );
+    // Send notification to fundraiser (don't fail if this fails)
+    try {
+      await sendNotification(
+        campaign.creator_id,
+        "New Pending Donation 💰",
+        `You received a donation of $${donationData.amount} for "${campaign.title}" pending verification.`,
+        "info",
+        `/dashboard/donations`
+      );
+    } catch (error) {
+      console.error("Failed to send notification:", error);
+    }
   }
 
   return { success: true };
