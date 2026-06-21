@@ -438,57 +438,66 @@ export async function submitDonationAction(donationData: {
   message?: string;
   is_anonymous?: boolean;
 }) {
-  const supabase = await createServiceClient();
+  try {
+    const supabase = await createServiceClient();
 
-  // Generate a transaction reference
-  const transactionReference = `DON-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+    console.log("Submitting donation:", {
+      ...donationData,
+      payment_method: "evc_plus",
+      status: "pending_verification",
+    });
 
-  const { error: insertError } = await supabase.from("donations").insert({
-    ...donationData,
-    transaction_reference: transactionReference,
-    payment_method: "evc_plus",
-    status: "pending_verification",
-  });
+    const { error: insertError } = await supabase.from("donations").insert({
+      ...donationData,
+      payment_method: "evc_plus",
+      status: "pending_verification",
+    });
 
-  if (insertError) {
-    console.error("Donation insert error:", insertError);
-    return { error: insertError.message };
-  }
-
-  // Fetch campaign details to notify fundraiser and send Telegram notification
-  const { data: campaign } = await supabase
-    .from("campaigns")
-    .select("creator_id, title")
-    .eq("id", donationData.campaign_id)
-    .single();
-
-  if (campaign) {
-    // Send Telegram notification (don't fail if this fails)
-    try {
-      await notifyNewDonation(
-        donationData.donor_name,
-        donationData.amount,
-        campaign.title
-      );
-    } catch (error) {
-      console.error("Failed to send Telegram notification:", error);
+    if (insertError) {
+      console.error("Donation insert error:", insertError);
+      return { error: insertError.message };
     }
 
-    // Send notification to fundraiser (don't fail if this fails)
-    try {
-      await sendNotification(
-        campaign.creator_id,
-        "New Pending Donation 💰",
-        `You received a donation of $${donationData.amount} for "${campaign.title}" pending verification.`,
-        "info",
-        `/dashboard/donations`
-      );
-    } catch (error) {
-      console.error("Failed to send notification:", error);
-    }
-  }
+    console.log("Donation inserted successfully");
 
-  return { success: true };
+    // Fetch campaign details to notify fundraiser and send Telegram notification
+    const { data: campaign } = await supabase
+      .from("campaigns")
+      .select("creator_id, title")
+      .eq("id", donationData.campaign_id)
+      .single();
+
+    if (campaign) {
+      // Send Telegram notification (don't fail if this fails)
+      try {
+        await notifyNewDonation(
+          donationData.donor_name,
+          donationData.amount,
+          campaign.title
+        );
+      } catch (error) {
+        console.error("Failed to send Telegram notification:", error);
+      }
+
+      // Send notification to fundraiser (don't fail if this fails)
+      try {
+        await sendNotification(
+          campaign.creator_id,
+          "New Pending Donation 💰",
+          `You received a donation of $${donationData.amount} for "${campaign.title}" pending verification.`,
+          "info",
+          `/dashboard/donations`
+        );
+      } catch (error) {
+        console.error("Failed to send notification:", error);
+      }
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Submit donation action error:", error);
+    return { error: error instanceof Error ? error.message : "An unexpected error occurred" };
+  }
 }
 
 // 6. Verify Donation (Admin)
