@@ -728,65 +728,95 @@ export async function processWithdrawalAction(
   status: string,
   adminId: string
 ) {
-  const supabase = await createServiceClient();
+  try {
+    const supabase = await createServiceClient();
 
-  // Fetch withdrawal details
-  const { data: withdrawal } = await supabase
-    .from("withdrawal_requests")
-    .select("*, campaigns(title)")
-    .eq("id", withdrawalId)
-    .single();
+    console.log("Processing withdrawal:", { withdrawalId, status, adminId });
 
-  if (!withdrawal) return { error: "Withdrawal request not found" };
+    // Fetch withdrawal details
+    const { data: withdrawal, error: fetchError } = await supabase
+      .from("withdrawal_requests")
+      .select("*, campaigns(title)")
+      .eq("id", withdrawalId)
+      .single();
 
-  const campaign = withdrawal.campaigns as unknown as { title: string };
+    if (fetchError) {
+      console.error("Error fetching withdrawal:", fetchError);
+      return { error: fetchError.message };
+    }
 
-  // Update request
-  const { error: updateError } = await supabase
-    .from("withdrawal_requests")
-    .update({
-      status,
-      processed_by: adminId,
-      processed_at: new Date().toISOString(),
-    })
-    .eq("id", withdrawalId);
+    if (!withdrawal) {
+      console.error("Withdrawal not found:", withdrawalId);
+      return { error: "Withdrawal request not found" };
+    }
 
-  if (updateError) return { error: updateError.message };
+    const campaign = withdrawal.campaigns as unknown as { title: string };
 
-  // Notify fundraiser
-  let title = "Withdrawal Update";
-  let message = "";
-  let type = "info";
+    console.log("Updating withdrawal status:", { withdrawalId, status });
 
-  if (status === "approved") {
-    title = "Withdrawal Approved! 💸";
-    message = `Your withdrawal of $${withdrawal.amount} for "${campaign.title}" is approved and will be paid shortly.`;
-    type = "success";
-  } else if (status === "paid") {
-    title = "Withdrawal Paid! 🎉";
-    message = `Your withdrawal of $${withdrawal.amount} for "${campaign.title}" has been marked as paid.`;
-    type = "success";
-  } else if (status === "rejected") {
-    title = "Withdrawal Rejected ❌";
-    message = `Your withdrawal of $${withdrawal.amount} for "${campaign.title}" was rejected.`;
-    type = "error";
+    // Update request
+    const { error: updateError } = await supabase
+      .from("withdrawal_requests")
+      .update({
+        status,
+        processed_by: adminId,
+        processed_at: new Date().toISOString(),
+      })
+      .eq("id", withdrawalId);
+
+    if (updateError) {
+      console.error("Error updating withdrawal:", updateError);
+      return { error: updateError.message };
+    }
+
+    console.log("Withdrawal updated successfully");
+
+    // Notify fundraiser
+    let title = "Withdrawal Update";
+    let message = "";
+    let type = "info";
+
+    if (status === "approved") {
+      title = "Withdrawal Approved! 💸";
+      message = `Your withdrawal of $${withdrawal.amount} for "${campaign.title}" is approved and will be paid shortly.`;
+      type = "success";
+    } else if (status === "paid") {
+      title = "Withdrawal Paid! 🎉";
+      message = `Your withdrawal of $${withdrawal.amount} for "${campaign.title}" has been marked as paid.`;
+      type = "success";
+    } else if (status === "rejected") {
+      title = "Withdrawal Rejected ❌";
+      message = `Your withdrawal of $${withdrawal.amount} for "${campaign.title}" was rejected.`;
+      type = "error";
+    }
+
+    try {
+      await sendNotification(
+        withdrawal.fundraiser_id,
+        title,
+        message,
+        type,
+        `/dashboard/withdrawals`
+      );
+    } catch (error) {
+      console.error("Failed to send notification:", error);
+    }
+
+    // Admin log
+    try {
+      await supabase.from("admin_logs").insert({
+        admin_id: adminId,
+        action: `withdrawal_${status}`,
+        entity_type: "withdrawal",
+        entity_id: withdrawalId,
+      });
+    } catch (error) {
+      console.error("Failed to log admin action:", error);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Process withdrawal action error:", error);
+    return { error: error instanceof Error ? error.message : "An unexpected error occurred" };
   }
-
-  await sendNotification(
-    withdrawal.fundraiser_id,
-    title,
-    message,
-    type,
-    `/dashboard/withdrawals`
-  );
-
-  // Admin log
-  await supabase.from("admin_logs").insert({
-    admin_id: adminId,
-    action: `withdrawal_${status}`,
-    entity_type: "withdrawal",
-    entity_id: withdrawalId,
-  });
-
-  return { success: true };
 }
