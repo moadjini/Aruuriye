@@ -440,13 +440,20 @@ export async function submitDonationAction(donationData: {
 }) {
   const supabase = await createServiceClient();
 
+  // Generate a transaction reference
+  const transactionReference = `DON-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+
   const { error: insertError } = await supabase.from("donations").insert({
     ...donationData,
+    transaction_reference: transactionReference,
     payment_method: "evc_plus",
     status: "pending_verification",
   });
 
-  if (insertError) return { error: insertError.message };
+  if (insertError) {
+    console.error("Donation insert error:", insertError);
+    return { error: insertError.message };
+  }
 
   // Fetch campaign details to notify fundraiser and send Telegram notification
   const { data: campaign } = await supabase
