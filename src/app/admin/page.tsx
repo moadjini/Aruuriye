@@ -41,7 +41,7 @@ export default async function AdminDashboard() {
     .select("amount")
     .eq("status", "verified")
     .gte("created_at", today);
-  const todayEarnings = todayDonations?.reduce((s, d) => s + Number(d.amount), 0) * 0.05 || 0;
+  const todayEarnings = (todayDonations || []).reduce((s, d) => s + Number(d.amount), 0) * 0.05;
 
   return (
     <div className="w-full animate-fade-in">
