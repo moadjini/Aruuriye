@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, Copy, ArrowRight, Info } from "lucide-react";
+import { Check, Copy, ArrowRight, Info, Home } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +18,7 @@ interface DonateFormProps {
 }
 
 export function DonateForm({ campaignId, campaignTitle }: DonateFormProps) {
+  const router = useRouter();
   const [step, setStep] = useState<"amount" | "submit" | "success">("amount");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -102,12 +104,22 @@ export function DonateForm({ campaignId, campaignTitle }: DonateFormProps) {
               Your donation will be reviewed by our team. Once verified, it will appear on the campaign progress and the fundraiser will be notified.
             </p>
           </div>
-          <Button
-            onClick={() => setStep("amount")}
-            className="w-full"
-          >
-            Make Another Donation
-          </Button>
+          <div className="flex gap-3">
+            <Button
+              onClick={() => setStep("amount")}
+              className="flex-1"
+            >
+              Make Another Donation
+            </Button>
+            <Button
+              onClick={() => router.push("/")}
+              variant="outline"
+              className="flex-1"
+            >
+              <Home className="mr-2 h-4 w-4" />
+              Return to Home
+            </Button>
+          </div>
         </div>
       </div>
     );
