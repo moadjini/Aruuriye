@@ -1029,27 +1029,31 @@ export async function processWithdrawalAction(
 // Upload Avatar
 export async function uploadAvatarAction(file: File) {
   try {
-    const supabase = await createServiceClient();
+    // Use regular client for authentication
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
       return { error: "User not authenticated" };
     }
 
+    // Use service client for storage operations (bypasses RLS)
+    const serviceSupabase = await createServiceClient();
+
     const fileExt = file.name.split('.').pop();
     const fileName = `${user.id}-${Math.random()}.${fileExt}`;
     const filePath = `avatars/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file);
+    const { error: uploadError } = await serviceSupabase.storage.from('avatars').upload(filePath, file);
 
     if (uploadError) {
       console.error("Avatar upload error:", uploadError);
       return { error: uploadError.message };
     }
 
-    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
+    const { data: { publicUrl } } = serviceSupabase.storage.from('avatars').getPublicUrl(filePath);
 
-    const { error: updateError } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id);
+    const { error: updateError } = await serviceSupabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id);
 
     if (updateError) {
       console.error("Profile update error:", updateError);
@@ -1066,14 +1070,18 @@ export async function uploadAvatarAction(file: File) {
 // Update Profile
 export async function updateProfileAction(data: { full_name: string; phone_number: string; city: string }) {
   try {
-    const supabase = await createServiceClient();
+    // Use regular client for authentication
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
       return { error: "User not authenticated" };
     }
+
+    // Use service client for database operations (bypasses RLS)
+    const serviceSupabase = await createServiceClient();
     
-    const { error } = await supabase.from("profiles").update(data).eq("id", user.id);
+    const { error } = await serviceSupabase.from("profiles").update(data).eq("id", user.id);
     
     if (error) {
       console.error("Profile update error:", error);
