@@ -30,7 +30,7 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
   return (
     <Card className="overflow-hidden p-0 h-full flex flex-col hover:border-secondary/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-premium-hover w-full animate-scale-in">
       <Link href={`/campaigns/${campaign.slug}`} className="flex flex-1 flex-col">
-        <div className="relative h-48 sm:h-52 md:h-56 w-full bg-slate-100">
+        <div className="relative w-full aspect-video bg-slate-100">
           {campaign.cover_image_url ? (
             <Image src={campaign.cover_image_url} alt={campaign.title} fill className="object-cover" />
           ) : (

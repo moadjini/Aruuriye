@@ -37,7 +37,8 @@ export default function AdminDonationsPage() {
       alert("Failed to verify donation: " + result.error);
     } else {
       alert(`Donation ${status} successfully!`);
-      load();
+      // Force refresh after a short delay to ensure database updates are reflected
+      setTimeout(() => load(), 500);
     }
   };
 

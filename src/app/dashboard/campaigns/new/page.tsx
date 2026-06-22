@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { campaignSchema, type CampaignInput } from "@/lib/validations";
 import { createClient } from "@/lib/supabase/client";
 import { createCampaignAction } from "@/app/actions/platform";
+import { ImageCropper } from "@/components/campaigns/image-cropper";
 
 export default function NewCampaignPage() {
   const router = useRouter();
@@ -20,6 +21,9 @@ export default function NewCampaignPage() {
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [imageError, setImageError] = useState("");
+  const [showCropper, setShowCropper] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [croppedFile, setCroppedFile] = useState<File | null>(null);
 
   const {
     register,
@@ -38,8 +42,8 @@ export default function NewCampaignPage() {
   }, []);
 
   const onSubmit = async (data: CampaignInput) => {
-    if (!coverFile) {
-      setImageError("Cover photo is required. Please upload an image.");
+    if (!croppedFile) {
+      setImageError("Cover photo is required. Please upload and crop an image.");
       return;
     }
 
@@ -57,12 +61,12 @@ export default function NewCampaignPage() {
 
     try {
       // 1. Upload Cover Image to Supabase storage
-      const ext = coverFile.name.split(".").pop();
+      const ext = croppedFile.name.split(".").pop() || "jpg";
       const path = `${user.id}/${Date.now()}.${ext}`;
       
       const { data: upload, error: uploadError } = await supabase.storage
         .from("campaign-covers")
-        .upload(path, coverFile);
+        .upload(path, croppedFile);
 
       if (uploadError) {
         setError("Failed to upload cover photo: " + uploadError.message);
@@ -101,6 +105,32 @@ export default function NewCampaignPage() {
     }
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (file) {
+      setCoverFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+        setShowCropper(true);
+      };
+      reader.readAsDataURL(file);
+      setImageError("");
+    }
+  };
+
+  const handleCropComplete = (croppedBlob: Blob) => {
+    const croppedFile = new File([croppedBlob], "cropped-image.jpg", { type: "image/jpeg" });
+    setCroppedFile(croppedFile);
+    setShowCropper(false);
+  };
+
+  const handleCancelCrop = () => {
+    setShowCropper(false);
+    setImagePreview(null);
+    setCoverFile(null);
+  };
+
   return (
     <div className="max-w-2xl animate-fade-in">
       <h1 className="text-2xl font-bold text-text">Let&apos;s Create Your Campaign</h1>
@@ -123,14 +153,11 @@ export default function NewCampaignPage() {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] || null;
-                    setCoverFile(file);
-                    if (file) setImageError("");
-                  }}
+                  onChange={handleFileSelect}
                   className="text-sm text-text-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary-light file:text-secondary hover:file:bg-secondary/20 file:cursor-pointer"
                 />
-                <p className="text-[10px] text-text-muted">Choose a photo that captures your campaign. Supports JPG, PNG, GIF up to 5MB.</p>
+                <p className="text-[10px] text-text-muted">Choose a photo that captures your campaign. Supports JPG, PNG, GIF up to 5MB. Image will be cropped to 16:9 ratio.</p>
+                {croppedFile && <p className="text-xs text-green-600 mt-0.5">✓ Image cropped and ready</p>}
                 {imageError && <p className="text-xs text-red-600 mt-0.5">{imageError}</p>}
               </div>
             </div>
@@ -154,6 +181,14 @@ export default function NewCampaignPage() {
           </form>
         </CardContent>
       </Card>
+
+      {showCropper && imagePreview && (
+        <ImageCropper
+          image={imagePreview}
+          onCropComplete={handleCropComplete}
+          onCancel={handleCancelCrop}
+        />
+      )}
     </div>
   );
 }

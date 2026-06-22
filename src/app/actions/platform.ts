@@ -687,16 +687,19 @@ export async function verifyDonationAction(
 
     // Update campaign stats if verified
     if (status === "verified") {
+      const donationAmount = donation.amount || 0;
       const { error: campaignUpdateError } = await supabase
         .from("campaigns")
         .update({
-          raised_amount: (campaign.raised_amount || 0) + donation.amount,
+          raised_amount: (campaign.raised_amount || 0) + donationAmount,
           donor_count: (campaign.donor_count || 0) + 1,
         })
         .eq("id", donation.campaign_id);
 
       if (campaignUpdateError) {
         console.error("Failed to update campaign stats:", campaignUpdateError);
+      } else {
+        console.log("Campaign stats updated successfully");
       }
 
       try {
@@ -980,15 +983,15 @@ export async function processWithdrawalAction(
 
     if (status === "approved") {
       title = "Withdrawal Approved! 💸";
-      message = `Your withdrawal of $${withdrawal.amount} for "${campaign.title}" is approved and will be paid shortly.`;
+      message = `Your withdrawal of $${withdrawal.amount || 0} for "${campaign.title}" is approved and will be paid shortly.`;
       type = "success";
     } else if (status === "paid") {
       title = "Withdrawal Paid! 🎉";
-      message = `Your withdrawal of $${withdrawal.amount} for "${campaign.title}" has been marked as paid.`;
+      message = `Your withdrawal of $${withdrawal.amount || 0} for "${campaign.title}" has been marked as paid.`;
       type = "success";
     } else if (status === "rejected") {
       title = "Withdrawal Rejected ❌";
-      message = `Your withdrawal of $${withdrawal.amount} for "${campaign.title}" was rejected.`;
+      message = `Your withdrawal of $${withdrawal.amount || 0} for "${campaign.title}" was rejected.`;
       type = "error";
     }
 
