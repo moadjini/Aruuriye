@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { profileSchema } from "@/lib/validations";
 import { createClient } from "@/lib/supabase/client";
-import { createServiceClient } from "@/lib/supabase/server";
+import { updateProfileAction, uploadAvatarAction } from "@/app/actions/platform";
 import { VerificationBadge } from "@/components/ui/verification-badge";
 import { User, Camera } from "lucide-react";
 import Image from "next/image";
@@ -39,34 +39,14 @@ export default function SettingsPage() {
     if (!file) return;
 
     setUploading(true);
-    const supabase = await createServiceClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setUploading(false);
-      return;
-    }
 
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-    const filePath = `avatars/${fileName}`;
+    const result = await uploadAvatarAction(file);
 
-    const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file);
-
-    if (uploadError) {
-      alert("Failed to upload avatar: " + uploadError.message);
-      setUploading(false);
-      return;
-    }
-
-    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
-
-    const { error: updateError } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id);
-
-    if (updateError) {
-      alert("Failed to update profile: " + updateError.message);
-    } else {
+    if (result.error) {
+      alert("Failed to upload avatar: " + result.error);
+    } else if (result.avatarUrl) {
       alert("Avatar updated successfully!");
-      setProfile({ ...profile, avatar_url: publicUrl });
+      setProfile({ ...profile, avatar_url: result.avatarUrl });
     }
 
     setUploading(false);
@@ -74,21 +54,16 @@ export default function SettingsPage() {
 
   const onSubmit = async (data: { full_name: string; phone_number: string; city: string }) => {
     setLoading(true);
-    const supabase = await createServiceClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+
+    const result = await updateProfileAction(data);
     
-    const { error } = await supabase.from("profiles").update(data).eq("id", user.id);
-    
-    if (error) {
-      alert("Failed to update profile: " + error.message);
+    if (result.error) {
+      alert("Failed to update profile: " + result.error);
     } else {
       alert("Profile updated successfully!");
       // Refresh profile data
-      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle().then(({ data: updatedProfile }) => {
+      const supabase = createClient();
+      supabase.from("profiles").select("*").eq("id", profile?.id || "").maybeSingle().then(({ data: updatedProfile }) => {
         if (updatedProfile) {
           setProfile(updatedProfile);
         }

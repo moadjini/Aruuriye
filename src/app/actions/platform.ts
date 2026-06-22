@@ -1025,3 +1025,64 @@ export async function processWithdrawalAction(
     return { error: error instanceof Error ? error.message : "An unexpected error occurred" };
   }
 }
+
+// Upload Avatar
+export async function uploadAvatarAction(file: File) {
+  try {
+    const supabase = await createServiceClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return { error: "User not authenticated" };
+    }
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+    const filePath = `avatars/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file);
+
+    if (uploadError) {
+      console.error("Avatar upload error:", uploadError);
+      return { error: uploadError.message };
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
+
+    const { error: updateError } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id);
+
+    if (updateError) {
+      console.error("Profile update error:", updateError);
+      return { error: updateError.message };
+    }
+
+    return { success: true, avatarUrl: publicUrl };
+  } catch (error) {
+    console.error("Upload avatar action error:", error);
+    return { error: error instanceof Error ? error.message : "An unexpected error occurred" };
+  }
+}
+
+// Update Profile
+export async function updateProfileAction(data: { full_name: string; phone_number: string; city: string }) {
+  try {
+    const supabase = await createServiceClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return { error: "User not authenticated" };
+    }
+    
+    const { error } = await supabase.from("profiles").update(data).eq("id", user.id);
+    
+    if (error) {
+      console.error("Profile update error:", error);
+      return { error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Update profile action error:", error);
+    return { error: error instanceof Error ? error.message : "An unexpected error occurred" };
+  }
+}
