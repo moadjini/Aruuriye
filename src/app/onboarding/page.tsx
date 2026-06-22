@@ -30,7 +30,7 @@ export default function OnboardingPage() {
         .from("profiles")
         .select("full_name, phone_number, city")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
       if (profile && profile.full_name && profile.phone_number) {
         // User already has profile info, redirect to campaigns
@@ -62,12 +62,14 @@ export default function OnboardingPage() {
 
     const { error } = await supabase
       .from("profiles")
-      .update({
+      .upsert({
+        id: user.id,
         full_name: fullName,
         phone_number: phone,
         city: city,
-      })
-      .eq("id", user.id);
+      }, {
+        onConflict: "id"
+      });
 
     if (error) {
       setError("Failed to update profile. Please try again.");
