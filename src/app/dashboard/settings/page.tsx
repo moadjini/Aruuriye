@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { profileSchema } from "@/lib/validations";
 import { createClient } from "@/lib/supabase/client";
+import { createServiceClient } from "@/lib/supabase/server";
 import { VerificationBadge } from "@/components/ui/verification-badge";
 import { User, Camera } from "lucide-react";
 import Image from "next/image";
@@ -24,7 +25,7 @@ export default function SettingsPage() {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
-      supabase.from("profiles").select("*").eq("id", user.id).single().then(({ data }) => {
+      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle().then(({ data }) => {
         if (data) {
           setProfile(data);
           reset({ full_name: data.full_name || "", phone_number: data.phone_number || "", city: data.city || "" });
@@ -38,7 +39,7 @@ export default function SettingsPage() {
     if (!file) return;
 
     setUploading(true);
-    const supabase = createClient();
+    const supabase = await createServiceClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       setUploading(false);
@@ -73,7 +74,7 @@ export default function SettingsPage() {
 
   const onSubmit = async (data: { full_name: string; phone_number: string; city: string }) => {
     setLoading(true);
-    const supabase = createClient();
+    const supabase = await createServiceClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       setLoading(false);
@@ -87,7 +88,7 @@ export default function SettingsPage() {
     } else {
       alert("Profile updated successfully!");
       // Refresh profile data
-      supabase.from("profiles").select("*").eq("id", user.id).single().then(({ data: updatedProfile }) => {
+      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle().then(({ data: updatedProfile }) => {
         if (updatedProfile) {
           setProfile(updatedProfile);
         }
