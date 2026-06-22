@@ -16,6 +16,10 @@ export const metadata: Metadata = {
   description:
     "Somalia's trusted crowdfunding platform. Help individuals, students, medical patients, and community projects raise funds safely and transparently.",
   keywords: ["crowdfunding", "Somalia", "donations", "fundraising", "EVC Plus"],
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export const viewport: Viewport = {
