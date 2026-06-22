@@ -185,7 +185,7 @@ export async function resolveReportAction(formData: FormData) {
 
     if (updateError) {
       console.error("Error resolving report:", updateError);
-      return { error: updateError.message };
+      return;
     }
 
     if (freezeCampaign && status === "resolved") {
@@ -194,11 +194,8 @@ export async function resolveReportAction(formData: FormData) {
         console.error("Error freezing campaign:", campaignError);
       }
     }
-
-    return { success: true };
   } catch (error) {
     console.error("Resolve report action error:", error);
-    return { error: error instanceof Error ? error.message : "An unexpected error occurred" };
   }
 }
 

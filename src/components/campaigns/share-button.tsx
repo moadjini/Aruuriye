@@ -19,8 +19,8 @@ export function ShareButton({ slug, title, variant = "button", className }: Shar
     : `/campaigns/${slug}`;
 
   const shareMessage = title 
-    ? `🙏 I need your help! Please support my campaign "${title}" on Aruuriye. Every donation, no matter how small, brings me closer to my goal. Your support means the world to me! 💜 ${url}`
-    : `🙏 I need your help! Please support my campaign on Aruuriye. Every donation, no matter how small, brings me closer to my goal. Your support means the world to me! 💜 ${url}`;
+    ? `Support "${title}" on Aruuriye. Every donation helps. ${url}`
+    : `Support this campaign on Aruuriye. Every donation helps. ${url}`;
 
   const copyLink = async () => {
     try {
