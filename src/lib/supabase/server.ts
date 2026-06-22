@@ -35,5 +35,18 @@ export async function createServiceClient() {
     throw new Error("Supabase key is required. Please set SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable.");
   }
   
-  return createClient(supabaseUrl, supabaseKey);
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    },
+    db: {
+      schema: 'public'
+    },
+    global: {
+      headers: {
+        'x-service-role': process.env.SUPABASE_SERVICE_ROLE_KEY ? 'true' : 'false'
+      }
+    }
+  });
 }
