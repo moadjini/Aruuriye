@@ -49,7 +49,7 @@ export default function VerificationPage() {
     // Upload National ID
     const nationalIdExt = nationalIdFile.name.split(".").pop();
     const nationalIdPath = `${user.id}/national_id_${Date.now()}.${nationalIdExt}`;
-    const { data: nationalIdUpload, error: nationalIdError } = await supabase.storage.from("documents").upload(nationalIdPath, nationalIdFile);
+    const { data: nationalIdUpload, error: nationalIdError } = await supabase.storage.from("verification-docs").upload(nationalIdPath, nationalIdFile);
 
     if (nationalIdError) {
       alert("Failed to upload National ID: " + nationalIdError.message);
@@ -57,12 +57,12 @@ export default function VerificationPage() {
       return;
     }
 
-    const { data: { publicUrl: nationalIdUrl } } = supabase.storage.from("documents").getPublicUrl(nationalIdPath);
+    const { data: { publicUrl: nationalIdUrl } } = supabase.storage.from("verification-docs").getPublicUrl(nationalIdPath);
 
     // Upload Face Photo
     const facePhotoExt = facePhotoFile.name.split(".").pop();
     const facePhotoPath = `${user.id}/face_photo_${Date.now()}.${facePhotoExt}`;
-    const { data: facePhotoUpload, error: facePhotoError } = await supabase.storage.from("documents").upload(facePhotoPath, facePhotoFile);
+    const { data: facePhotoUpload, error: facePhotoError } = await supabase.storage.from("verification-docs").upload(facePhotoPath, facePhotoFile);
 
     if (facePhotoError) {
       alert("Failed to upload face photo: " + facePhotoError.message);
@@ -70,7 +70,7 @@ export default function VerificationPage() {
       return;
     }
 
-    const { data: { publicUrl: facePhotoUrl } } = supabase.storage.from("documents").getPublicUrl(facePhotoPath);
+    const { data: { publicUrl: facePhotoUrl } } = supabase.storage.from("verification-docs").getPublicUrl(facePhotoPath);
 
     // Combine both URLs with a separator
     const combinedDocumentUrl = `${nationalIdUrl}|||${facePhotoUrl}`;

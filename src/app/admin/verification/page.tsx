@@ -37,7 +37,16 @@ export default function AdminVerificationPage() {
       return;
     }
 
-    const result = await reviewVerificationAction(id, userId, status, "verified", user.id);
+    // Get the requested level from the verification request
+    const { data: request } = await supabase
+      .from("verification_requests")
+      .select("requested_level")
+      .eq("id", id)
+      .maybeSingle();
+
+    const level = request?.requested_level || "level_1";
+
+    const result = await reviewVerificationAction(id, userId, status, level, user.id);
     
     if (result.error) {
       alert("Failed to review verification: " + result.error);

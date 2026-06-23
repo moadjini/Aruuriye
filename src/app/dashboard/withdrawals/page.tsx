@@ -14,10 +14,11 @@ import { createClient } from "@/lib/supabase/client";
 import { formatCurrency, calculatePlatformFee, formatDate, getStatusColor } from "@/lib/utils";
 
 export default function WithdrawalsPage() {
-  const [campaigns, setCampaigns] = useState<{ id: string; title: string; raised_amount: number }[]>([]);
+  const [campaigns, setCampaigns] = useState<{ id: string; title: string; raised_amount: number; available_balance: number }[]>([]);
   const [withdrawals, setWithdrawals] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [error, setError] = useState("");
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<WithdrawalInput>({
     resolver: zodResolver(withdrawalSchema),
@@ -31,16 +32,52 @@ export default function WithdrawalsPage() {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
-      supabase.from("campaigns").select("id, title, raised_amount").eq("creator_id", user.id).in("status", ["active", "verified"]).then(({ data }) => setCampaigns(data || []));
+      
+      // Fetch campaigns with available balance calculation
+      supabase.from("campaigns").select("id, title, raised_amount").eq("creator_id", user.id).in("status", ["active", "verified"]).then(({ data: campaignsData }) => {
+        if (campaignsData) {
+          // Calculate available balance for each campaign
+          Promise.all(campaignsData.map(async (campaign) => {
+            const { data: withdrawals } = await supabase
+              .from("withdrawal_requests")
+              .select("amount")
+              .eq("campaign_id", campaign.id)
+              .in("status", ["approved", "paid"]);
+            
+            const totalWithdrawn = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+            const availableBalance = Number(campaign.raised_amount) - totalWithdrawn;
+            
+            return { ...campaign, available_balance: availableBalance };
+          })).then(campaignsWithBalance => {
+            setCampaigns(campaignsWithBalance);
+          });
+        }
+      });
+      
       supabase.from("withdrawal_requests").select("*").eq("fundraiser_id", user.id).order("created_at", { ascending: false }).then(({ data }) => setWithdrawals(data || []));
     });
   }, []);
 
   const onSubmit = async (data: WithdrawalInput) => {
     setLoading(true);
+    setError("");
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+
+    // Validate against available balance
+    const selectedCampaign = campaigns.find(c => c.id === data.campaign_id);
+    if (!selectedCampaign) {
+      setError("Campaign not found");
+      setLoading(false);
+      return;
+    }
+
+    if (Number(data.amount) > selectedCampaign.available_balance) {
+      setError(`Insufficient balance. Available: ${formatCurrency(selectedCampaign.available_balance)}`);
+      setLoading(false);
+      return;
+    }
 
     await supabase.from("withdrawal_requests").insert({
       campaign_id: data.campaign_id,
@@ -72,7 +109,7 @@ export default function WithdrawalsPage() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-md">
               <Select
                 label="Campaign"
-                options={[{ value: "", label: "Select campaign" }, ...campaigns.map((c) => ({ value: c.id, label: `${c.title} (${formatCurrency(c.raised_amount)})` }))]}
+                options={[{ value: "", label: "Select campaign" }, ...campaigns.map((c) => ({ value: c.id, label: `${c.title} (Available: ${formatCurrency(c.available_balance)})` }))]}
                 {...register("campaign_id")}
                 error={errors.campaign_id?.message}
               />
@@ -91,6 +128,7 @@ export default function WithdrawalsPage() {
                   <div className="flex justify-between font-semibold border-t pt-1"><span>You Receive</span><span className="text-primary">{formatCurrency(net)}</span></div>
                 </div>
               )}
+              {error && <p className="text-sm text-red-600 rounded-lg bg-red-50 p-3">{error}</p>}
               <Button type="submit" loading={loading}>Submit Request</Button>
             </form>
           </CardContent>
