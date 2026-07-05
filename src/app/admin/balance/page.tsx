@@ -49,7 +49,14 @@ export default function AdminBalancePage() {
         const campaignIds = campaigns?.map((c) => c.id) || [];
 
         if (campaignIds.length === 0) {
-          return { ...user, available_balance: 0 };
+          // If no campaigns, still check for balance adjustments
+          const { data: adjustments } = await supabase
+            .from("balance_adjustments")
+            .select("amount")
+            .eq("user_id", user.id);
+
+          const totalAdjustments = adjustments?.reduce((sum, a) => sum + (a.amount as number), 0) || 0;
+          return { ...user, available_balance: totalAdjustments };
         }
 
         // Calculate total raised from verified donations
@@ -66,11 +73,19 @@ export default function AdminBalancePage() {
           .from("withdrawal_requests")
           .select("amount")
           .in("campaign_id", campaignIds)
-          .in("status", ["pending", "approved", "completed"]);
+          .in("status", ["approved", "paid"]);
 
         const totalWithdrawn = withdrawals?.reduce((sum, w) => sum + (w.amount as number), 0) || 0;
 
-        const availableBalance = totalRaised - totalWithdrawn;
+        // Calculate balance adjustments
+        const { data: adjustments } = await supabase
+          .from("balance_adjustments")
+          .select("amount")
+          .eq("user_id", user.id);
+
+        const totalAdjustments = adjustments?.reduce((sum, a) => sum + (a.amount as number), 0) || 0;
+
+        const availableBalance = totalRaised - totalWithdrawn + totalAdjustments;
 
         return {
           ...user,
