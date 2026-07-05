@@ -1094,3 +1094,49 @@ export async function updateProfileAction(data: { full_name: string; phone_numbe
     return { error: error instanceof Error ? error.message : "An unexpected error occurred" };
   }
 }
+
+// Create Broadcast
+export async function createBroadcastAction(data: {
+  title: string;
+  message: string;
+  type: string;
+  is_popup: boolean;
+  popup_duration: number;
+  target_audience: string;
+  created_by: string;
+}) {
+  try {
+    const supabase = await createServiceClient();
+
+    const { error } = await supabase.from("broadcasts").insert(data);
+
+    if (error) {
+      console.error("Error creating broadcast:", error);
+      return { error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Create broadcast action error:", error);
+    return { error: error instanceof Error ? error.message : "An unexpected error occurred" };
+  }
+}
+
+// Delete Broadcast
+export async function deleteBroadcastAction(id: string) {
+  try {
+    const supabase = await createServiceClient();
+
+    const { error } = await supabase.from("broadcasts").delete().eq("id", id);
+
+    if (error) {
+      console.error("Error deleting broadcast:", error);
+      return { error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Delete broadcast action error:", error);
+    return { error: error instanceof Error ? error.message : "An unexpected error occurred" };
+  }
+}

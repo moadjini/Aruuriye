@@ -100,11 +100,20 @@ export default async function DashboardPage() {
         .from("withdrawal_requests")
         .select("amount, status")
         .in("campaign_id", campaignIds)
-        .eq("status", "paid")
+        .in("status", ["approved", "paid"])
     : { data: [] };
 
   const totalWithdrawn = withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
-  const availableBalance = totalRaised - totalWithdrawn;
+
+  // Fetch balance adjustments
+  const { data: adjustments } = await supabase
+    .from("balance_adjustments")
+    .select("amount")
+    .eq("user_id", profile!.id);
+
+  const totalAdjustments = adjustments?.reduce((sum, a) => sum + Number(a.amount), 0) || 0;
+
+  const availableBalance = totalRaised - totalWithdrawn + totalAdjustments;
 
   return (
     <div className="w-full">

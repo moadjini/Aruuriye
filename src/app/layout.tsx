@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { BroadcastPopup } from "@/components/broadcast-popup";
 import { getProfile } from "@/lib/auth";
 import { APP_NAME, APP_TAGLINE } from "@/lib/constants";
 
@@ -40,6 +41,7 @@ export default async function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className={`${inter.variable} min-h-screen flex flex-col`}>
+        <BroadcastPopup />
         <Header profile={profile} />
         <main className="flex-1">{children}</main>
         <Footer />
