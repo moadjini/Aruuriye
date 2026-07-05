@@ -10,7 +10,7 @@ export function Logo({ className = "h-10 w-auto", showText = false }: LogoProps)
   return (
     <div className="flex items-center select-none">
       <Image
-        src="/Gemini_Generated_Image_9w12x79w12x79w12.png"
+        src="/Gemini_Generated_Image_cmhcr4cmhcr4cmhc.png"
         alt="Aruuriye"
         width={120}
         height={32}
