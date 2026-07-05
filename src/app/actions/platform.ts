@@ -28,7 +28,9 @@ export async function sendNotification(
   });
   if (error) {
     console.error("Error inserting notification:", error.message);
+    return { error: error.message };
   }
+  return { success: true };
 }
 
 // Submit Report

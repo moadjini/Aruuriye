@@ -3,8 +3,12 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { formatDate } from "@/lib/utils";
-import { Bell, Check, CheckCheck } from "lucide-react";
+import { Bell, Check, CheckCheck, Send } from "lucide-react";
+import { sendNotification } from "@/app/actions/platform";
 
 interface Notification {
   id: string;
@@ -18,6 +22,14 @@ interface Notification {
 export default function AdminNotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showSendForm, setShowSendForm] = useState(false);
+  const [users, setUsers] = useState<any[]>([]);
+  const [selectedUser, setSelectedUser] = useState("");
+  const [title, setTitle] = useState("");
+  const [message, setMessage] = useState("");
+  const [type, setType] = useState("info");
+  const [link, setLink] = useState("");
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -40,7 +52,16 @@ export default function AdminNotificationsPage() {
       setLoading(false);
     };
 
+    const fetchUsers = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .order("created_at", { ascending: false });
+      setUsers(data || []);
+    };
+
     fetchNotifications();
+    fetchUsers();
 
     // Real-time subscription for new notifications
     const channel = supabase
@@ -83,22 +104,102 @@ export default function AdminNotificationsPage() {
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
   };
 
+  const handleSendNotification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser || !title || !message) return;
+
+    setSending(true);
+    const result = await sendNotification(selectedUser, title, message, type, link || undefined);
+
+    if (result.error) {
+      alert("Failed to send notification: " + result.error);
+    } else {
+      alert("Notification sent successfully!");
+      setTitle("");
+      setMessage("");
+      setLink("");
+      setSelectedUser("");
+      setShowSendForm(false);
+    }
+
+    setSending(false);
+  };
+
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
     <div className="animate-fade-in">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-text">Admin Notifications</h1>
-        {unreadCount > 0 && (
-          <button
-            onClick={markAllAsRead}
-            className="flex items-center gap-2 text-sm font-semibold text-secondary hover:text-secondary-dark transition-colors"
-          >
-            <CheckCheck className="h-4 w-4" />
-            Mark all as read
-          </button>
-        )}
+        <div className="flex gap-3">
+          <Button onClick={() => setShowSendForm(!showSendForm)}>
+            <Send className="mr-2 h-4 w-4" />
+            Send Notification
+          </Button>
+          {unreadCount > 0 && (
+            <button
+              onClick={markAllAsRead}
+              className="flex items-center gap-2 text-sm font-semibold text-secondary hover:text-secondary-dark transition-colors"
+            >
+              <CheckCheck className="h-4 w-4" />
+              Mark all as read
+            </button>
+          )}
+        </div>
       </div>
+
+      {showSendForm && (
+        <Card className="mt-6 p-6">
+          <h2 className="text-lg font-semibold mb-4">Send Notification</h2>
+          <form onSubmit={handleSendNotification} className="space-y-4 max-w-2xl">
+            <Select
+              label="Select User"
+              options={[{ value: "", label: "Select a user" }, ...users.map((u) => ({ value: u.id, label: `${u.full_name} (${u.email})` }))]}
+              value={selectedUser}
+              onChange={(e) => setSelectedUser(e.target.value)}
+            />
+            <Input
+              label="Title"
+              placeholder="Notification title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Message</label>
+              <textarea
+                className="w-full rounded-lg border border-gray-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/20"
+                rows={4}
+                placeholder="Notification message"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                required
+              />
+            </div>
+            <Select
+              label="Type"
+              options={[
+                { value: "info", label: "Info" },
+                { value: "success", label: "Success" },
+                { value: "warning", label: "Warning" },
+                { value: "error", label: "Error" },
+              ]}
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+            />
+            <Input
+              label="Link (optional)"
+              placeholder="https://example.com"
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+            />
+            <div className="flex gap-3">
+              <Button type="submit" loading={sending}>Send</Button>
+              <Button type="button" variant="outline" onClick={() => setShowSendForm(false)}>Cancel</Button>
+            </div>
+          </form>
+        </Card>
+      )}
       
       {loading ? (
         <div className="mt-6 space-y-3">
