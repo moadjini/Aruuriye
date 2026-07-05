@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
+import { updateProfileAction } from "@/app/actions/platform";
 import { User, MapPin, Phone } from "lucide-react";
 
 export default function OnboardingPage() {
@@ -60,18 +61,13 @@ export default function OnboardingPage() {
       return;
     }
 
-    const { error } = await supabase
-      .from("profiles")
-      .upsert({
-        id: user.id,
-        full_name: fullName,
-        phone_number: phone,
-        city: city,
-      }, {
-        onConflict: "id"
-      });
+    const result = await updateProfileAction({
+      full_name: fullName,
+      phone_number: phone,
+      city: city,
+    });
 
-    if (error) {
+    if (result.error) {
       setError("Failed to update profile. Please try again.");
       setLoading(false);
       return;
