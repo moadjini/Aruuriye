@@ -9,7 +9,7 @@ export default async function AdminReportsPage() {
   const supabase = await createServiceClient();
   const { data: reports, error } = await supabase
     .from("reports")
-    .select("*, campaigns(title, slug), profiles(full_name)")
+    .select("*, campaigns(title, slug), reporter:profiles!reports_reporter_id_fkey(full_name)")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -32,7 +32,7 @@ export default async function AdminReportsPage() {
                   <p className="font-medium mt-2">{(r.campaigns as { title: string })?.title}</p>
                   <p className="text-sm text-text-muted mt-1">{r.description as string}</p>
                   <p className="text-xs text-text-muted mt-2">
-                    Reported by {(r.profiles as { full_name: string })?.full_name || "Anonymous"} · {formatDate(r.created_at as string)}
+                    Reported by {(r.reporter as { full_name: string })?.full_name || "Anonymous"} · {formatDate(r.created_at as string)}
                   </p>
                 </div>
                 {r.status === "pending" && (
